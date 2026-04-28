@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Icon Explorer — Browse and copy 200,000+ icons from Lucide and Iconify</title>
+  <meta name="description" content="A free, fast icon browser for developers and designers. Search Lucide and 150+ Iconify sets, customize size, color, and stroke, copy SVG with one click, and export sprites." />
+  <meta name="theme-color" content="#ffffff" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Icon Explorer — Browse and copy 200,000+ icons" />
+  <meta property="og:description" content="Free icon browser for Lucide and Iconify. Search, customize, copy SVG, export sprites." />
+  <meta property="og:site_name" content="Tsuchiya Lab — Icon Explorer" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Icon Explorer — Browse and copy 200,000+ icons" />
+  <meta name="twitter:description" content="Free icon browser for Lucide and Iconify. Search, customize, copy SVG, export sprites." />
+  <link rel="canonical" href="https://icons.tsuchiyalab.com/" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+    body { font-family: 'Inter', sans-serif; background: #ffffff; color: #111827; }
+    input[type=range]{ -webkit-appearance:none; background:transparent; }
+    input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; height:16px; width:16px; border-radius:9999px; background:#2563EB; cursor:pointer; margin-top:-6px; }
+    input[type=range]::-webkit-slider-runnable-track{ width:100%; height:4px; cursor:pointer; background:#E5E7EB; border-radius:9999px; }
+    input[type="color"]{ -webkit-appearance:none; border:none; width:32px; height:32px; border-radius:6px; padding:0; overflow:hidden; cursor:pointer; }
+    input[type="color"]::-webkit-color-swatch-wrapper{ padding:0; }
+    input[type="color"]::-webkit-color-swatch{ border:none; }
+    .icon-preview svg { width: 100%; height: 100%; display:block; }
+    .pill { border: 1px solid #E5E7EB; background: #fff; border-radius: 9999px; padding: 0.125rem 0.5rem; font-size: 0.7rem; color: #6B7280; }
+    .modal-backdrop { background: rgba(17, 24, 39, 0.55); }
+  </style>
+</head>
+<body class="p-4 sm:p-6">
+  <div class="max-w-7xl mx-auto">
+    <div class="flex items-start justify-between gap-3">
+      <div class="min-w-0">
+        <h1 class="text-xl sm:text-2xl font-semibold text-gray-900 truncate">
+          Icon Explorer <span class="text-gray-300">·</span>
+          <span id="source-badge" class="text-gray-700">Lucide</span>
+          <span id="collection-badge" class="text-gray-500"></span>
+        </h1>
+        <p class="text-sm text-gray-500 mt-1">
+          検索・ページ切替・SVGコピー・スプライト出力。小画面では操作は上、通常は右サイドバーです。
+        </p>
+        <p id="status-line" class="text-xs text-gray-500 mt-2 hidden"></p>
+      </div>
+      <button id="download-all-btn" class="shrink-0 px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed">
+        Download Sprite
+      </button>
+    </div>
+
+    <div class="mt-5 flex flex-col lg:flex-row gap-5">
+      <!-- MAIN (order changes on small screens) -->
+      <main class="order-2 lg:order-1 flex-1 min-w-0">
+        <div class="flex items-center justify-between gap-3">
+          <div class="text-xs text-gray-500">
+            Showing <span id="showing-range" class="font-medium text-gray-700">0–0</span> of
+            <span id="total-count-display" class="font-medium text-gray-700">0</span>
+            <span class="text-gray-300">/</span>
+            total in set: <span id="total-count" class="font-medium text-gray-700">0</span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button id="prev-page" class="px-2 py-1 text-xs rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">Prev</button>
+            <button id="next-page" class="px-2 py-1 text-xs rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">Next</button>
+            <span class="text-xs text-gray-500">Page</span>
+            <input id="page-input" type="number" min="1" value="1" class="w-16 px-2 py-1 text-xs rounded border border-gray-200" />
+            <span class="text-xs text-gray-500">/ <span id="total-pages">1</span></span>
+          </div>
+        </div>
+
+        <div id="icon-grid" class="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-4"></div>
+      </main>
+
+      <!-- SIDEBAR (top on small, right on large) -->
+      <aside class="order-1 lg:order-2 w-full lg:w-[360px]">
+        <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm lg:sticky lg:top-6">
+          <div class="grid grid-cols-1 gap-4">
+
+            <div>
+              <label class="block text-xs text-gray-500 mb-1">Source</label>
+              <select id="source-select" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+                <option value="lucide" selected>Lucide</option>
+                <option value="iconify">Iconify</option>
+              </select>
+              <p class="mt-1 text-[11px] text-gray-400">
+                IconifyはAPI経由でオンデマンド取得します。
+              </p>
+            </div>
+
+            <div id="iconify-controls" class="hidden">
+              <div class="flex items-center justify-between gap-2">
+                <label class="block text-xs text-gray-500">Iconify collection (prefix)</label>
+                <button id="browse-sets-btn" class="text-xs px-2 py-1 rounded border border-gray-200 hover:bg-gray-50">Browse sets</button>
+              </div>
+
+              <div class="mt-2 flex gap-2">
+                <select id="iconify-prefix-select" class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+                  <option value="mdi" selected>mdi (Material Design Icons)</option>
+                  <option value="tabler">tabler (Tabler Icons)</option>
+                  <option value="bi">bi (Bootstrap Icons)</option>
+                  <option value="ph">ph (Phosphor)</option>
+                  <option value="ri">ri (Remix Icon)</option>
+                  <option value="carbon">carbon</option>
+                  <option value="fluent">fluent</option>
+                  <option value="octicon">octicon</option>
+                  <option value="simple-icons">simple-icons</option>
+                  <option value="lucide">lucide (via Iconify)</option>
+                  <option value="_custom">Custom…</option>
+                </select>
+                <button id="iconify-load-btn" class="px-3 py-2 text-sm rounded-lg border border-gray-200 hover:bg-gray-50">
+                  Load
+                </button>
+              </div>
+
+              <input id="iconify-prefix-custom" type="text" placeholder="e.g. material-symbols" class="mt-2 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm hidden" />
+
+              <div class="mt-2 flex items-center justify-between gap-2">
+                <label class="text-sm text-gray-600 flex items-center gap-2">
+                  <input type="checkbox" id="iconify-include-hidden" class="h-4 w-4 rounded border-gray-300" />
+                  hidden/aliasも含める
+                </label>
+                <span id="iconify-meta" class="text-[11px] text-gray-400"></span>
+              </div>
+
+              <div class="mt-2 flex items-center justify-between gap-2">
+                <span class="text-[11px] text-gray-500">Iconify status:</span>
+                <span id="iconify-health" class="text-[11px] text-gray-500">unknown</span>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs text-gray-500 mb-1">Search</label>
+              <input type="text" id="search-input" placeholder="Search icons..." class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 text-sm" />
+              <div class="mt-2 flex items-center gap-2" id="lucide-all-toggle-row">
+                <input type="checkbox" id="all-icons-toggle" class="h-4 w-4 rounded border-gray-300" checked />
+                <label for="all-icons-toggle" class="text-sm text-gray-600">All Lucide icons</label>
+                <span id="all-icons-hint" class="text-xs text-gray-400 hidden">未検索でも全件をページ表示します。</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Size</label>
+                <div class="flex items-center gap-2">
+                  <input type="range" id="size-slider" min="16" max="160" value="64" class="w-full" />
+                  <span class="text-xs text-gray-600 w-12 text-right"><span id="size-value">64</span>px</span>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Color</label>
+                <div class="flex items-center gap-2">
+                  <input type="color" id="color-picker" value="#2563EB" />
+                  <input type="text" id="color-text" value="#2563EB" class="w-24 px-3 py-2 border border-gray-200 rounded-lg text-sm uppercase" />
+                </div>
+                <p id="color-note" class="mt-1 text-[11px] text-gray-400 hidden">
+                  ※ Iconifyは単色アイコンのみ色反映（currentColor置換）。
+                </p>
+              </div>
+            </div>
+
+            <div id="stroke-controls">
+              <label class="block text-xs text-gray-500 mb-1">Width (Lucide)</label>
+              <div class="flex items-center gap-2">
+                <input type="range" id="width-slider" min="0.5" max="3" step="0.1" value="1.5" class="w-full" />
+                <span id="width-value" class="text-xs text-gray-600 w-10 text-right">1.5</span>
+              </div>
+                <p id="stroke-note" class="mt-1 text-[11px] text-gray-400 hidden">※ Iconifyでは線幅変更は適用されません（塗りつぶしアイコンが多いため）。</p>
+            </div>
+
+
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-gray-500">Per page</span>
+                <select id="page-size" class="px-2 py-1 text-xs rounded border border-gray-200 bg-white">
+                  <option value="120">120</option>
+                  <option value="240" selected>240</option>
+                  <option value="480">480</option>
+                  <option value="960">960</option>
+                </select>
+              </div>
+              <button id="retest-btn" class="text-xs px-2 py-1 rounded border border-gray-200 hover:bg-gray-50">Re-test</button>
+            </div>
+
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Browse Sets Modal -->
+  <div id="sets-modal" class="fixed inset-0 hidden items-center justify-center p-4 z-50">
+    <div class="absolute inset-0 modal-backdrop"></div>
+    <div class="relative w-full max-w-3xl bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+      <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          <div class="text-sm font-semibold text-gray-800 truncate">Browse Iconify sets</div>
+          <div class="text-[11px] text-gray-500">/collections からセット一覧を取得します。</div>
+        </div>
+        <button id="close-sets-btn" class="px-2 py-1 rounded border border-gray-200 hover:bg-gray-50 text-xs">Close</button>
+      </div>
+
+      <div class="p-4 grid grid-cols-1 md:grid-cols-12 gap-4">
+        <div class="md:col-span-4 space-y-3">
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Search (prefix / name)</label>
+            <input id="sets-search" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="e.g. material, tabler, fluent" />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">License filter (best-effort)</label>
+            <div class="space-y-2 text-sm text-gray-700">
+              <label class="flex items-center gap-2"><input id="lic-mit" type="checkbox" class="h-4 w-4" checked /> MIT</label>
+              <label class="flex items-center gap-2"><input id="lic-apache" type="checkbox" class="h-4 w-4" checked /> Apache 2.0</label>
+              <label class="flex items-center gap-2"><input id="lic-cc0" type="checkbox" class="h-4 w-4" checked /> CC0</label>
+              <label class="flex items-center gap-2"><input id="lic-isc" type="checkbox" class="h-4 w-4" checked /> ISC / Unlicense / 0BSD / OFL</label>
+            </div>
+            <p class="mt-1 text-[11px] text-gray-500">
+              ※ ライセンス情報はIconifyのセット情報に依存します。採用前に必ず原典を確認してください。
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="reload-sets" class="px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-sm">Reload</button>
+            <span id="sets-status" class="text-xs text-gray-500"></span>
+          </div>
+        </div>
+
+        <div class="md:col-span-8">
+          <div class="text-xs text-gray-500 mb-2">
+            Results: <span id="sets-count" class="font-medium text-gray-700">0</span>
+          </div>
+          <div id="sets-list" class="h-[55vh] overflow-auto border border-gray-200 rounded-xl divide-y"></div>
+        </div>
+      </div>
+
+      <div class="px-4 py-3 border-t border-gray-100 flex items-center justify-between gap-3">
+        <div class="text-[11px] text-gray-500">
+          選択したprefixを右サイドバーに反映します。
+        </div>
+        <button id="apply-set-btn" class="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+          Apply
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="max-w-7xl mx-auto mt-12 pt-6 border-t border-gray-100 flex items-center justify-between gap-3 text-xs text-gray-500">
+    <div class="flex items-center gap-2">
+      <span>Built by</span>
+      <a href="https://tsuchiyalab.com" target="_blank" rel="noopener noreferrer" class="font-medium text-gray-700 hover:text-gray-900 transition-colors">Tsuchiya Lab</a>
+      <span class="text-gray-300">·</span>
+      <span>Icons by</span>
+      <a href="https://lucide.dev" target="_blank" rel="noopener noreferrer" class="hover:text-gray-700 transition-colors">Lucide</a>
+      <span>·</span>
+      <a href="https://iconify.design" target="_blank" rel="noopener noreferrer" class="hover:text-gray-700 transition-colors">Iconify</a>
+    </div>
+    <a href="https://github.com/tsuchiyalab/icons" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55v-2.13c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.27-1.69-1.27-1.69-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.75 2.69 1.24 3.34.95.1-.74.4-1.24.72-1.53-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.18-3.1-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.16 1.18.92-.26 1.9-.39 2.88-.39.98 0 1.96.13 2.88.39 2.2-1.49 3.16-1.18 3.16-1.18.62 1.59.23 2.76.11 3.05.74.81 1.18 1.84 1.18 3.1 0 4.43-2.69 5.41-5.25 5.69.41.36.78 1.06.78 2.13v3.16c0 .31.21.66.79.55C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z"/></svg>
+      <span>GitHub</span>
+    </a>
+  </footer>
+
+  <!-- Libraries -->
+  <script src="https://unpkg.com/lucide@0.561.0/dist/umd/lucide.min.js"></script>
+  <script src="https://code.iconify.design/iconify-icon/3.0.2/iconify-icon.min.js"></script>
+
+  <script>
+    // ---------- Shared helpers ----------
+    function toTitleCase(id) {
+      return id.split('-').map((s) => s ? (s[0].toUpperCase() + s.slice(1)) : s).join(' ');
+    }
+    function escapeAttr(v) {
+      return String(v).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+    function setStatus(text) {
+      const el = document.getElementById("status-line");
+      if (!text) { el.classList.add("hidden"); el.textContent = ""; return; }
+      el.classList.remove("hidden");
+      el.textContent = text;
+    }
+
+    // ---------- Lucide SVG build (direct) ----------
+    function buildLucideSvgString(iconId, attrs) {
+      const nodes = (window.lucide && window.lucide.icons && window.lucide.icons[iconId]) ? window.lucide.icons[iconId] : null;
+      if (!nodes) return null;
+
+      const svgAttrs = {
+        xmlns: "http://www.w3.org/2000/svg",
+        width: attrs.width,
+        height: attrs.height,
+        viewBox: "0 0 24 24",
+        fill: "none",
+        stroke: attrs.stroke,
+        "stroke-width": attrs.strokeWidth,
+        "stroke-linecap": "round",
+        "stroke-linejoin": "round"
+      };
+      const svgAttrString = Object.entries(svgAttrs).map(([k,v]) => `${k}="${escapeAttr(v)}"`).join(" ");
+      const body = nodes.map(([tag, nodeAttrs]) => {
+        const a = Object.entries(nodeAttrs).map(([k,v]) => `${k}="${escapeAttr(v)}"`).join(" ");
+        return `<${tag} ${a} />`;
+      }).join("");
+      return `<svg ${svgAttrString}>${body}</svg>`;
+    }
+
+    function buildLucideSpriteString(iconIds) {
+      const symbols = iconIds
+        .filter((id) => window.lucide && window.lucide.icons && window.lucide.icons[id])
+        .map((id) => {
+          const nodes = window.lucide.icons[id];
+          const body = nodes.map(([tag, nodeAttrs]) => {
+            const a = Object.entries(nodeAttrs).map(([k,v]) => `${k}="${escapeAttr(v)}"`).join(" ");
+            return `<${tag} ${a} />`;
+          }).join("");
+          return `<symbol id="lucide-${id}" viewBox="0 0 24 24">${body}</symbol>`;
+        })
+        .join("");
+      return `<svg xmlns="http://www.w3.org/2000/svg" style="display:none">${symbols}</svg>`;
+    }
+
+    // ---------- Iconify helpers ----------
+    const ICONIFY_API = "https://api.iconify.design";
+    async function fetchJson(url, timeoutMs=12000) {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), timeoutMs);
+      try {
+        const res = await fetch(url, { signal: ctrl.signal });
+        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+        return await res.json();
+      } finally {
+        clearTimeout(t);
+      }
+    }
+
+    async function fetchIconifyCollection(prefix) {
+      // /collection?prefix={prefix} lists icons in a set 
+      const url = `${ICONIFY_API}/collection?prefix=${encodeURIComponent(prefix)}&info=1`;
+      return await fetchJson(url);
+    }
+
+    function extractVisibleIconifyNames(data) {
+      const set = new Set();
+      if (Array.isArray(data.uncategorized)) data.uncategorized.forEach((n) => set.add(n));
+      if (data.categories && typeof data.categories === 'object') {
+        Object.values(data.categories).forEach((arr) => { if (Array.isArray(arr)) arr.forEach((n) => set.add(n)); });
+      }
+      const hidden = Array.isArray(data.hidden) ? data.hidden : [];
+      const aliases = data.aliases && typeof data.aliases === 'object' ? Object.keys(data.aliases) : [];
+      const visible = Array.from(set).filter((n) => !hidden.includes(n) && !aliases.includes(n));
+      visible.sort();
+      return { visible, hidden, aliases };
+    }
+
+    async function testIconifyHealth() {
+      const el = document.getElementById("iconify-health");
+      try {
+        const data = await fetchJson(`${ICONIFY_API}/collections?prefix=mdi`, 8000);
+        el.textContent = data && data.mdi ? "OK" : "OK?";
+        el.className = "text-[11px] text-emerald-700";
+      } catch (e) {
+        el.textContent = "NG (API blocked?)";
+        el.className = "text-[11px] text-rose-700";
+      }
+    }
+
+    // ---------- Curated icons ----------
+    const curatedIcons = [
+      { id: "home", name: "Home" }, { id: "menu", name: "Menu" }, { id: "x", name: "Close" },
+      { id: "check", name: "Check" }, { id: "plus", name: "Plus" }, { id: "minus", name: "Minus" },
+      { id: "ellipsis", name: "Dots" }, { id: "search", name: "Search" }, { id: "filter", name: "Filter" },
+      { id: "sliders-horizontal", name: "Sliders" }, { id: "settings", name: "Settings" }, { id: "info", name: "Info" },
+      { id: "circle-help", name: "Help" }, { id: "alert-triangle", name: "Alert" }, { id: "bell", name: "Bell" },
+      { id: "mail", name: "Mail" }, { id: "phone", name: "Phone" }, { id: "map-pin", name: "Map Pin" },
+      { id: "calendar", name: "Calendar" }, { id: "clock", name: "Clock" }, { id: "watch", name: "Watch" },
+      { id: "tag", name: "Tag" }, { id: "key", name: "Key" }, { id: "bold", name: "Bold" },
+      { id: "italic", name: "Italic" }, { id: "underline", name: "Underline" }, { id: "link", name: "Link" },
+      { id: "image", name: "Image" }, { id: "file", name: "File" }, { id: "folder", name: "Folder" },
+      { id: "download", name: "Download" }, { id: "upload", name: "Upload" }, { id: "copy", name: "Copy" },
+      { id: "trash-2", name: "Trash" }, { id: "pencil", name: "Pencil" }, { id: "share-2", name: "Share" }
+    ];
+
+    // ---------- State ----------
+    const state = {
+      source: "lucide",
+      search: "",
+      color: "#2563EB",
+      width: 1.5,
+      size: 64,
+      useAllLucide: true,
+      page: 1,
+      pageSize: 240,
+
+      // iconify
+      iconifyPrefix: "mdi",
+      iconifyTitle: "",
+      iconifyVisible: [],
+      iconifyHidden: [],
+      iconifyAliases: [],
+      iconifyIncludeHidden: false,
+
+      spriteUrl: null
+    };
+
+    // ---------- DOM ----------
+    const grid = document.getElementById("icon-grid");
+    const searchInput = document.getElementById("search-input");
+    const colorPicker = document.getElementById("color-picker");
+    const colorText = document.getElementById("color-text");
+    const widthSlider = document.getElementById("width-slider");
+    const widthValue = document.getElementById("width-value");
+    const sizeSlider = document.getElementById("size-slider");
+    const sizeValue = document.getElementById("size-value");
+    const showingRange = document.getElementById("showing-range");
+    const totalPagesEl = document.getElementById("total-pages");
+    const prevPageBtn = document.getElementById("prev-page");
+    const nextPageBtn = document.getElementById("next-page");
+    const pageInput = document.getElementById("page-input");
+    const pageSizeSelect = document.getElementById("page-size");
+    const totalCount = document.getElementById("total-count");
+    const totalCountDisplay = document.getElementById("total-count-display");
+    const downloadAllBtn = document.getElementById("download-all-btn");
+    const allIconsToggle = document.getElementById("all-icons-toggle");
+    const allIconsHint = document.getElementById("all-icons-hint");
+
+    const sourceSelect = document.getElementById("source-select");
+    const sourceBadge = document.getElementById("source-badge");
+    const collectionBadge = document.getElementById("collection-badge");
+    const strokeControls = document.getElementById("stroke-controls");
+    const strokeNote = document.getElementById("stroke-note");
+    const lucideAllToggleRow = document.getElementById("lucide-all-toggle-row");
+    const iconifyControls = document.getElementById("iconify-controls");
+    const iconifyPrefixSelect = document.getElementById("iconify-prefix-select");
+    const iconifyPrefixCustom = document.getElementById("iconify-prefix-custom");
+    const iconifyLoadBtn = document.getElementById("iconify-load-btn");
+    const iconifyIncludeHidden = document.getElementById("iconify-include-hidden");
+    const iconifyMeta = document.getElementById("iconify-meta");
+    const colorNote = document.getElementById("color-note");
+    const retestBtn = document.getElementById("retest-btn");
+
+    let previewObserver = null;
+
+    function setModeUI() {
+      const isLucide = state.source === "lucide";
+      sourceBadge.textContent = isLucide ? "Lucide" : "Iconify";
+      collectionBadge.textContent = isLucide ? "" : ` · ${state.iconifyPrefix}${state.iconifyTitle ? " (" + state.iconifyTitle + ")" : ""}`;
+
+      strokeControls.classList.remove("hidden");
+      strokeNote.classList.toggle("hidden", isLucide);
+      lucideAllToggleRow.classList.toggle("hidden", !isLucide);
+      iconifyControls.classList.toggle("hidden", isLucide);
+      colorNote.classList.toggle("hidden", isLucide);
+
+      if (!isLucide) {
+        const meta = [];
+        if (state.iconifyVisible.length) meta.push(`visible: ${state.iconifyVisible.length}`);
+        if (state.iconifyHidden.length) meta.push(`hidden: ${state.iconifyHidden.length}`);
+        if (state.iconifyAliases.length) meta.push(`aliases: ${state.iconifyAliases.length}`);
+        iconifyMeta.textContent = meta.join(" · ");
+      } else {
+        iconifyMeta.textContent = "";
+      }
+    }
+
+    function getBaseList() {
+      if (state.source === "lucide") {
+        const allLucideIds = (window.lucide && window.lucide.icons) ? Object.keys(window.lucide.icons).sort() : [];
+        const base = state.useAllLucide
+          ? allLucideIds.map((id) => ({ id, name: toTitleCase(id), kind: "icon" }))
+          : curatedIcons.map((x) => ({ id: x.id, name: x.name, kind: "icon" }));
+        return base;
+      }
+      const prefix = state.iconifyPrefix;
+      const visible = state.iconifyVisible.map((n) => ({ id: `${prefix}:${n}`, name: n, kind: "icon" }));
+      if (!state.iconifyIncludeHidden) return visible;
+      const hidden = state.iconifyHidden.map((n) => ({ id: `${prefix}:${n}`, name: n, kind: "hidden" }));
+      const aliases = state.iconifyAliases.map((n) => ({ id: `${prefix}:${n}`, name: n, kind: "alias" }));
+      return visible.concat(hidden).concat(aliases);
+    }
+
+    function filterList(base) {
+      const q = state.search.trim().toLowerCase();
+      if (state.source === "lucide" && state.useAllLucide && !q) allIconsHint.classList.remove("hidden");
+      else allIconsHint.classList.add("hidden");
+
+      if (!q) return base;
+      return base.filter((icon) => {
+        const id = icon.id.toLowerCase();
+        const name = String(icon.name).toLowerCase();
+        return id.includes(q) || name.includes(q);
+      });
+    }
+
+    function kindPill(kind) {
+      if (kind === "hidden") return '<span class="pill">hidden</span>';
+      if (kind === "alias") return '<span class="pill">alias</span>';
+      return '';
+    }
+
+    async function copySvgForItem(item) {
+      if (state.source === "lucide") {
+        const svg = buildLucideSvgString(item.id, { width: 24, height: 24, stroke: state.color, strokeWidth: state.width });
+        if (!svg) throw new Error("Lucide icon not found");
+        await navigator.clipboard.writeText(svg);
+        return;
+      }
+      // Iconify: prefer iconify-icon's rendered SVG is in shadow DOM, so fetch from API for reliable copy.
+      const url = `${ICONIFY_API}/${encodeURIComponent(state.iconifyPrefix)}/${encodeURIComponent(item.name)}.svg?color=${encodeURIComponent(state.color)}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Iconify SVG fetch failed: ${res.status}`);
+      const svg = await res.text();
+      await navigator.clipboard.writeText(svg);
+    }
+
+    function resetObserver() {
+      if (previewObserver) {
+        try { previewObserver.disconnect(); } catch (_) {}
+      }
+      previewObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const el = entry.target;
+          previewObserver.unobserve(el);
+          const id = el.getAttribute("data-id");
+          const name = el.getAttribute("data-name");
+          const kind = el.getAttribute("data-kind");
+          if (state.source === "lucide") {
+            const svg = buildLucideSvgString(id, { width: state.size, height: state.size, stroke: state.color, strokeWidth: state.width });
+            el.innerHTML = svg ? svg : '<div class="text-[10px] text-gray-400">missing</div>';
+            return;
+          }
+          // iconify
+          const iconName = id; // prefix:name
+          // Rely on web component on-demand loading 
+          el.innerHTML = `<iconify-icon icon="${escapeAttr(iconName)}" width="${escapeAttr(state.size)}" height="${escapeAttr(state.size)}" style="color:${escapeAttr(state.color)};"></iconify-icon>`;
+        });
+      }, { rootMargin: "250px" });
+    }
+
+    async function render() {
+      setModeUI();
+      grid.innerHTML = "";
+
+      const base = getBaseList();
+      totalCount.textContent = String(base.length);
+
+      const filtered = filterList(base);
+      const totalMatches = filtered.length;
+      totalCountDisplay.textContent = String(totalMatches);
+
+      const pageSize = Math.max(1, Number(state.pageSize) || 240);
+      const totalPages = Math.max(1, Math.ceil(totalMatches / pageSize));
+      state.page = Math.min(Math.max(1, Number(state.page) || 1), totalPages);
+      pageInput.value = state.page;
+      totalPagesEl.textContent = String(totalPages);
+
+      prevPageBtn.disabled = state.page <= 1;
+      nextPageBtn.disabled = state.page >= totalPages;
+
+      const startIndex = totalMatches === 0 ? 0 : (state.page - 1) * pageSize;
+      const endIndex = totalMatches === 0 ? 0 : Math.min(startIndex + pageSize, totalMatches);
+      showingRange.textContent = (totalMatches === 0) ? "0–0" : `${startIndex + 1}–${endIndex}`;
+
+      // cleanup spriteUrl
+      if (state.spriteUrl) {
+        try { URL.revokeObjectURL(state.spriteUrl); } catch (_) {}
+        state.spriteUrl = null;
+      }
+
+      if (state.source === "lucide") {
+        const sprite = buildLucideSpriteString(filtered.map((x) => x.id));
+        if (sprite) {
+          const blob = new Blob([sprite], { type: "image/svg+xml;charset=utf-8" });
+          state.spriteUrl = URL.createObjectURL(blob);
+          downloadAllBtn.disabled = false;
+        } else {
+          downloadAllBtn.disabled = true;
+        }
+      } else {
+        downloadAllBtn.disabled = (filtered.length === 0);
+      }
+
+      const pageItems = filtered.slice(startIndex, endIndex);
+
+      resetObserver();
+
+      pageItems.forEach((item) => {
+        const card = document.createElement("div");
+        card.className = "group bg-white rounded-2xl border border-gray-200 p-3 hover:shadow-md transition-shadow";
+
+        const title = item.id;
+
+        // for copy, need both id and name for iconify
+        const displayName = (state.source === "lucide") ? item.name : item.name;
+
+        card.innerHTML = `
+          <div class="flex justify-center items-center bg-gray-50 rounded-xl group-hover:bg-blue-50 transition-colors" style="height: 96px;">
+            <div class="icon-preview" data-id="${escapeAttr(item.id)}" data-name="${escapeAttr(item.name)}" data-kind="${escapeAttr(item.kind || 'icon')}" style="width:${state.size}px; height:${state.size}px;"></div>
+          </div>
+          <div class="mt-2 flex items-start justify-between gap-2">
+            <div class="min-w-0 space-y-1">
+              <div class="flex items-center gap-2 min-w-0">
+                <h3 class="font-medium text-xs text-gray-800 group-hover:text-blue-700 truncate" title="${escapeAttr(title)}">${escapeAttr(displayName)}</h3>
+                ${kindPill(item.kind)}
+              </div>
+              <p class="text-[10px] text-gray-500 truncate" title="${escapeAttr(item.id)}">${escapeAttr(item.id)}</p>
+            </div>
+            <button class="copy-btn shrink-0 p-1 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-blue-600 transition-colors" title="Copy SVG">
+              <i data-lucide="copy" class="w-4 h-4"></i>
+            </button>
+          </div>
+        `;
+
+        const preview = card.querySelector(".icon-preview");
+        previewObserver.observe(preview);
+
+        const copyBtn = card.querySelector(".copy-btn");
+        copyBtn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          try {
+            await copySvgForItem(item);
+            copyBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i>';
+            if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+            setTimeout(() => {
+              copyBtn.innerHTML = '<i data-lucide="copy" class="w-4 h-4"></i>';
+              if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+            }, 900);
+          } catch (err) {
+            console.error(err);
+            copyBtn.innerHTML = '<i data-lucide="alert-triangle" class="w-4 h-4"></i>';
+            if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+          }
+        });
+
+        grid.appendChild(card);
+      });
+
+      if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+    }
+
+    // ---------- Iconify loading ----------
+    async function loadIconifyPrefix(prefix) {
+      state.iconifyPrefix = prefix;
+      state.iconifyTitle = "";
+      state.iconifyVisible = [];
+      state.iconifyHidden = [];
+      state.iconifyAliases = [];
+      setModeUI();
+
+      setStatus(`Loading Iconify collection: ${prefix} ...`);
+      try {
+        const data = await fetchIconifyCollection(prefix);
+        const title = (data && (data.title || (data.info && data.info.name))) ? (data.title || data.info.name) : "";
+        state.iconifyTitle = title;
+
+        const lists = extractVisibleIconifyNames(data);
+        state.iconifyVisible = lists.visible;
+        state.iconifyHidden = lists.hidden;
+        state.iconifyAliases = lists.aliases;
+
+        setStatus("");
+        state.page = 1;
+        await render();
+      } catch (e) {
+        console.error(e);
+        setStatus(`Load failed: ${prefix}（APIブロック or prefix不存在の可能性）`);
+        await render();
+      }
+    }
+
+    // ---------- Browse sets modal ----------
+    const modal = document.getElementById("sets-modal");
+    const browseBtn = document.getElementById("browse-sets-btn");
+    const closeBtn = document.getElementById("close-sets-btn");
+    const reloadBtn = document.getElementById("reload-sets");
+    const setsSearch = document.getElementById("sets-search");
+    const setsList = document.getElementById("sets-list");
+    const setsCount = document.getElementById("sets-count");
+    const setsStatus = document.getElementById("sets-status");
+    const applySetBtn = document.getElementById("apply-set-btn");
+    const licMIT = document.getElementById("lic-mit");
+    const licApache = document.getElementById("lic-apache");
+    const licCC0 = document.getElementById("lic-cc0");
+    const licISC = document.getElementById("lic-isc");
+
+    let allSets = null;
+    let selectedSetPrefix = null;
+
+    function openModal() {
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      selectedSetPrefix = null;
+      applySetBtn.disabled = true;
+      if (!allSets) fetchSets();
+      else renderSets();
+    }
+    function closeModal() {
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+
+    function normalizeLicense(lic) {
+      return (lic || "").toString().toLowerCase();
+    }
+    function allowByLicense(info) {
+      // best-effort based on IconifyInfo. Always verify original license.
+      const lic = normalizeLicense((info && info.license && (info.license.title || info.license.spdx || info.license)) || "");
+      const ok = [];
+      if (licMIT.checked) ok.push("mit");
+      if (licApache.checked) ok.push("apache");
+      if (licCC0.checked) ok.push("cc0");
+      if (licISC.checked) ok.push("isc", "unlicense", "0bsd", "ofl");
+      if (!lic) return true; // unknown => keep visible, let user decide
+      return ok.some((k) => lic.includes(k));
+    }
+
+    async function fetchSets() {
+      setsStatus.textContent = "Loading...";
+      try {
+        // /collections returns IconifyInfo by prefix 
+        allSets = await fetchJson(`${ICONIFY_API}/collections`, 15000);
+        setsStatus.textContent = "";
+        renderSets();
+      } catch (e) {
+        console.error(e);
+        setsStatus.textContent = "Failed (API blocked?)";
+        allSets = null;
+        renderSets();
+      }
+    }
+
+    function renderSets() {
+      setsList.innerHTML = "";
+      const q = (setsSearch.value || "").trim().toLowerCase();
+      const entries = allSets ? Object.entries(allSets) : [];
+      const filtered = entries
+        .filter(([prefix, info]) => {
+          if (q && !(prefix.toLowerCase().includes(q) || ((info && info.name) ? String(info.name).toLowerCase().includes(q) : false))) return false;
+          return allowByLicense(info);
+        })
+        .sort((a,b) => a[0].localeCompare(b[0]));
+
+      setsCount.textContent = String(filtered.length);
+
+      if (!allSets) {
+        const div = document.createElement("div");
+        div.className = "p-4 text-sm text-gray-600";
+        div.textContent = "Iconifyセット一覧が取得できませんでした。ネットワーク/CSP/プロキシで /collections がブロックされている可能性があります。";
+        setsList.appendChild(div);
+        return;
+      }
+
+      filtered.slice(0, 2000).forEach(([prefix, info]) => {
+        const row = document.createElement("button");
+        row.type = "button";
+        row.className = "w-full text-left px-3 py-2 hover:bg-gray-50 flex items-start justify-between gap-3";
+        const name = info && info.name ? String(info.name) : "";
+        const lic = info && info.license ? (info.license.title || info.license.spdx || "") : "";
+        row.innerHTML = `
+          <div class="min-w-0">
+            <div class="text-sm font-medium text-gray-800 truncate">${escapeAttr(prefix)} <span class="text-gray-400 font-normal">${name ? "· " + escapeAttr(name) : ""}</span></div>
+            <div class="text-[11px] text-gray-500 truncate">${lic ? "License: " + escapeAttr(lic) : "License: (unknown)"} </div>
+          </div>
+          <div class="text-[11px] text-gray-400 shrink-0">select</div>
+        `;
+        row.addEventListener("click", () => {
+          selectedSetPrefix = prefix;
+          applySetBtn.disabled = false;
+          // highlight selection
+          Array.from(setsList.children).forEach((c) => c.classList.remove("bg-blue-50"));
+          row.classList.add("bg-blue-50");
+        });
+        setsList.appendChild(row);
+      });
+    }
+
+    browseBtn.addEventListener("click", openModal);
+    closeBtn.addEventListener("click", closeModal);
+    modal.addEventListener("click", (e) => { if (e.target === modal || e.target.classList.contains("modal-backdrop")) closeModal(); });
+    reloadBtn.addEventListener("click", fetchSets);
+    setsSearch.addEventListener("input", renderSets);
+    [licMIT, licApache, licCC0, licISC].forEach((el) => el.addEventListener("change", renderSets));
+
+    applySetBtn.addEventListener("click", async () => {
+      if (!selectedSetPrefix) return;
+      // apply to sidebar select: if not present, set custom
+      const exists = Array.from(iconifyPrefixSelect.options).some((o) => o.value === selectedSetPrefix);
+      if (exists) {
+        iconifyPrefixSelect.value = selectedSetPrefix;
+        iconifyPrefixCustom.classList.add("hidden");
+        iconifyPrefixCustom.value = "";
+      } else {
+        iconifyPrefixSelect.value = "_custom";
+        iconifyPrefixCustom.classList.remove("hidden");
+        iconifyPrefixCustom.value = selectedSetPrefix;
+      }
+      closeModal();
+      state.search = "";
+      searchInput.value = "";
+      await loadIconifyPrefix(selectedSetPrefix);
+    });
+
+    // ---------- Event listeners ----------
+    function updateColor(val) {
+      state.color = val;
+      colorPicker.value = val;
+      colorText.value = val;
+      render();
+    }
+
+    sourceSelect.addEventListener("change", async (e) => {
+      state.source = e.target.value;
+      state.page = 1;
+      state.search = "";
+      searchInput.value = "";
+      if (state.source === "iconify" && state.iconifyVisible.length === 0) {
+        await testIconifyHealth();
+        await loadIconifyPrefix(state.iconifyPrefix || "mdi");
+      } else {
+        await render();
+      }
+    });
+
+    searchInput.addEventListener("input", (e) => {
+      state.search = e.target.value;
+      state.page = 1;
+      render();
+    });
+
+    colorPicker.addEventListener("input", (e) => updateColor(e.target.value));
+    colorText.addEventListener("input", (e) => updateColor(e.target.value));
+
+    widthSlider.addEventListener("input", (e) => {
+      state.width = Number(e.target.value);
+      widthValue.textContent = Number(state.width).toFixed(1);
+      render();
+    });
+
+    sizeSlider.addEventListener("input", (e) => {
+      state.size = Number(e.target.value);
+      sizeValue.textContent = String(state.size);
+      render();
+    });
+
+    prevPageBtn.addEventListener("click", () => {
+      if (state.page > 1) { state.page -= 1; render(); }
+    });
+
+    nextPageBtn.addEventListener("click", () => {
+      state.page += 1;
+      render();
+    });
+
+    pageInput.addEventListener("change", (e) => {
+      const v = Number(e.target.value);
+      state.page = Number.isFinite(v) && v > 0 ? Math.floor(v) : 1;
+      render();
+    });
+
+    pageSizeSelect.addEventListener("change", (e) => {
+      state.pageSize = Number(e.target.value) || 240;
+      state.page = 1;
+      render();
+    });
+
+    allIconsToggle.addEventListener("change", (e) => {
+      state.useAllLucide = !!e.target.checked;
+      state.page = 1;
+      render();
+    });
+
+    iconifyPrefixSelect.addEventListener("change", (e) => {
+      const v = e.target.value;
+      if (v === "_custom") {
+        iconifyPrefixCustom.classList.remove("hidden");
+        iconifyPrefixCustom.focus();
+      } else {
+        iconifyPrefixCustom.classList.add("hidden");
+        iconifyPrefixCustom.value = "";
+      }
+    });
+
+    iconifyIncludeHidden.addEventListener("change", (e) => {
+      state.iconifyIncludeHidden = !!e.target.checked;
+      state.page = 1;
+      render();
+    });
+
+    iconifyLoadBtn.addEventListener("click", async () => {
+      let prefix = iconifyPrefixSelect.value;
+      if (prefix === "_custom") prefix = iconifyPrefixCustom.value.trim();
+      if (!prefix) return;
+      state.search = "";
+      searchInput.value = "";
+      await testIconifyHealth();
+      await loadIconifyPrefix(prefix);
+    });
+
+    retestBtn.addEventListener("click", async () => {
+      if (state.source === "iconify") await testIconifyHealth();
+    });
+
+    downloadAllBtn.addEventListener("click", async () => {
+      const base = getBaseList();
+      const filtered = filterList(base);
+      if (filtered.length === 0) return;
+
+      if (state.source === "lucide") {
+        const url = state.spriteUrl || URL.createObjectURL(new Blob([buildLucideSpriteString(filtered.map((x) => x.id))], { type: "image/svg+xml;charset=utf-8" }));
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "lucide-sprite.svg";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        if (!state.spriteUrl) URL.revokeObjectURL(url);
+        return;
+      }
+
+      // Iconify sprite: fetch per icon SVG (network-heavy). Keep it available, but warn via status.
+      setStatus(`Building sprite from Iconify (${filtered.length} icons)...`);
+      downloadAllBtn.disabled = true;
+      try {
+        const symbols = [];
+        const limit = 8;
+        let idx = 0;
+
+        async function worker() {
+          while (idx < filtered.length) {
+            const i = idx++;
+            const full = filtered[i].id; // prefix:name
+            const parts = full.split(":");
+            const pfx = parts[0], name = parts.slice(1).join(":");
+            const url = `${ICONIFY_API}/${encodeURIComponent(pfx)}/${encodeURIComponent(name)}.svg?color=${encodeURIComponent(state.color)}`;
+            const res = await fetch(url);
+            if (!res.ok) continue;
+            const svg = await res.text();
+            // convert svg to symbol quickly
+            const doc = new DOMParser().parseFromString(svg, "image/svg+xml");
+            const svgEl = doc.documentElement;
+            if (!svgEl || svgEl.nodeName.toLowerCase() !== "svg") continue;
+            const viewBox = svgEl.getAttribute("viewBox") || "0 0 24 24";
+            const body = svgEl.innerHTML || "";
+            const symbolId = `iconify-${pfx}-${name}`;
+            symbols.push(`<symbol id="${escapeAttr(symbolId)}" viewBox="${escapeAttr(viewBox)}">${body}</symbol>`);
+          }
+        }
+
+        await Promise.all(new Array(limit).fill(0).map(worker));
+        const sprite = `<svg xmlns="http://www.w3.org/2000/svg" style="display:none">${symbols.join("")}</svg>`;
+        const blob = new Blob([sprite], { type: "image/svg+xml;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `iconify-${state.iconifyPrefix}-sprite.svg`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        setStatus("");
+      } catch (e) {
+        console.error(e);
+        setStatus("Sprite build failed（ネットワーク/ブロック/アイコン数が多すぎる可能性）");
+      } finally {
+        downloadAllBtn.disabled = false;
+      }
+    });
+
+    // ---------- Init ----------
+    window.addEventListener("load", async () => {
+      state.useAllLucide = allIconsToggle.checked;
+      state.pageSize = Number(pageSizeSelect.value) || state.pageSize;
+      widthValue.textContent = Number(state.width).toFixed(1);
+      sizeValue.textContent = String(state.size);
+      await render();
+      // Pre-test iconify in background is avoided; only test when switching to iconify.
+    });
+  </script>
+</body>
+</html>

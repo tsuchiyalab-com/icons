@@ -1,0 +1,27 @@
+# Cloudflare Workers Static Assets configuration for Icon Explorer.
+#
+# This deploys the contents of ./public as a static site at
+# icons.tsuchiyalab.com (or your own custom domain).
+#
+# Deploy:
+#   npm install
+#   npx wrangler deploy
+#
+# Custom domain (one-time setup, via Cloudflare dashboard):
+#   Workers & Pages → icons → Settings → Triggers → Custom Domains
+#   Add: icons.tsuchiyalab.com
+
+name = "icons"
+compatibility_date = "2025-04-01"
+
+[assets]
+directory = "./public"
+# /icons → /icons.html, etc. Matches Cloudflare Pages-like behavior.
+html_handling = "auto-trailing-slash"
+# Return 404 for missing assets so Cloudflare Managed Robots.txt can
+# create one from scratch and crawlers see proper 404s for unknown paths.
+not_found_handling = "404-page"
+
+# Observability is on by default for new Workers; uncomment to override.
+# [observability]
+# enabled = true
