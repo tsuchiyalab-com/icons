@@ -29,7 +29,7 @@ Visit **[icons.tsuchiyalab.com](https://icons.tsuchiyalab.com)** — no signup, 
 ### Run locally
 
 ```bash
-git clone https://github.com/tsuchiyalab/icons.git
+git clone https://github.com/tsuchiyatakahirolab/icons.git
 cd icons
 
 # any static server works:
