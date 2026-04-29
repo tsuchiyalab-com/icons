@@ -14,6 +14,12 @@
 name = "icons"
 compatibility_date = "2025-04-01"
 
+# Custom domain binding. Cloudflare auto-creates the DNS record on the
+# tsuchiyalab.com zone the first time this deploys.
+routes = [
+  { pattern = "icons.tsuchiyalab.com", custom_domain = true }
+]
+
 [assets]
 directory = "./public"
 # /icons → /icons.html, etc. Matches Cloudflare Pages-like behavior.

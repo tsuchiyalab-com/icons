@@ -6,8 +6,7 @@ customize size, color, and stroke, copy SVG with one click, and export sprites.
 
 **[Live demo →](https://icons.tsuchiyalab.com)**
 
-<!-- Add screenshot at .github/preview.png and uncomment the line below -->
-<!-- ![Icon Explorer screenshot](.github/preview.png) -->
+![Icon Explorer screenshot — Japanese tag search "設定" returning all cog-style icons in Lucide](.github/preview.png)
 
 ## Features
 
