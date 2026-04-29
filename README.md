@@ -13,7 +13,12 @@ customize size, color, and stroke, copy SVG with one click, and export sprites.
 
 - **200,000+ icons** across Lucide and Iconify collections
 - **Customizable** size, color, and stroke width
-- **One-click SVG copy** with current style applied
+- **Copy in 8 formats** with one click:
+  SVG · React (JSX/TSX) · Vue · Svelte · HTML `<img>` (data URI) · PNG (1x/2x/3x)
+- **Japanese tag search** for Lucide — search "設定" to find settings/cog/sliders, "通知" → bell/alerts, etc. (~150 mappings)
+- **Shareable URLs** — every search, color, size, and format choice is reflected in the URL,
+  so you can paste a link to show a teammate the exact icon configuration
+- **Keyboard shortcuts** — `/` or `Cmd/Ctrl+K` to focus search, `Esc` to clear
 - **SVG sprite export** for static sites
 - **Browse and switch** Iconify collections from the in-app sets browser
 - **License filter** for Iconify sets (MIT, Apache 2.0, CC0, etc.)

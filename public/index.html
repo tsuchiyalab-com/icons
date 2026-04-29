@@ -130,7 +130,7 @@
 
             <div>
               <label class="block text-xs text-gray-500 mb-1">Search</label>
-              <input type="text" id="search-input" placeholder="Search icons..." class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 text-sm" />
+              <input type="text" id="search-input" placeholder="Search icons…  (press / to focus)" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 text-sm" />
               <div class="mt-2 flex items-center gap-2" id="lucide-all-toggle-row">
                 <input type="checkbox" id="all-icons-toggle" class="h-4 w-4 rounded border-gray-300" checked />
                 <label for="all-icons-toggle" class="text-sm text-gray-600">All Lucide icons</label>
@@ -168,6 +168,21 @@
                 <p id="stroke-note" class="mt-1 text-[11px] text-gray-400 hidden">※ Iconifyでは線幅変更は適用されません（塗りつぶしアイコンが多いため）。</p>
             </div>
 
+
+            <div>
+              <label class="block text-xs text-gray-500 mb-1">Copy as</label>
+              <select id="copy-format" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+                <option value="svg" selected>SVG</option>
+                <option value="jsx">React (JSX/TSX)</option>
+                <option value="vue">Vue (SFC)</option>
+                <option value="svelte">Svelte</option>
+                <option value="html">HTML &lt;img&gt; (data URI)</option>
+                <option value="png-1x">PNG · 1x (size px)</option>
+                <option value="png-2x">PNG · 2x</option>
+                <option value="png-3x">PNG · 3x</option>
+              </select>
+              <p class="mt-1 text-[11px] text-gray-400">Click any icon's copy button to copy in this format.</p>
+            </div>
 
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-2">
@@ -269,6 +284,9 @@
     function toTitleCase(id) {
       return id.split('-').map((s) => s ? (s[0].toUpperCase() + s.slice(1)) : s).join(' ');
     }
+    function pascalCase(id) {
+      return id.split(/[-:_]/).map((s) => s ? (s[0].toUpperCase() + s.slice(1)) : s).join('');
+    }
     function escapeAttr(v) {
       return String(v).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
     }
@@ -277,6 +295,184 @@
       if (!text) { el.classList.add("hidden"); el.textContent = ""; return; }
       el.classList.remove("hidden");
       el.textContent = text;
+    }
+    function isJapanese(s) {
+      return /[぀-ヿ㐀-鿿ｦ-ﾟ]/.test(s);
+    }
+
+    // ---------- Japanese → Lucide tag dictionary ----------
+    // Maps common Japanese UI/business terms to Lucide icon IDs.
+    // Used in filterList() when source=lucide and query contains Japanese chars.
+    const JP_TAGS = {
+      "設定": ["settings", "settings-2", "cog", "sliders-horizontal", "sliders-vertical"],
+      "歯車": ["cog", "settings"], "通知": ["bell", "bell-ring", "bell-dot"], "ベル": ["bell"],
+      "検索": ["search"], "ホーム": ["home", "house"], "家": ["home", "house"],
+      "メニュー": ["menu", "ellipsis", "ellipsis-vertical", "align-justify"],
+      "ハンバーガー": ["menu"], "三本線": ["menu", "align-justify"],
+      "ユーザー": ["user", "users", "user-round"], "人": ["user", "users", "user-round"],
+      "プロフィール": ["user", "user-circle", "circle-user"], "アバター": ["user-circle", "circle-user"],
+      "グループ": ["users"], "招待": ["user-plus", "send"],
+      "ログイン": ["log-in"], "ログアウト": ["log-out"], "入口": ["log-in"], "出口": ["log-out"],
+      "編集": ["pencil", "edit", "edit-2", "edit-3", "pen"], "ペン": ["pen", "pencil"], "鉛筆": ["pencil"],
+      "削除": ["trash", "trash-2", "x"], "ゴミ箱": ["trash", "trash-2"], "ゴミ": ["trash", "trash-2"],
+      "追加": ["plus", "plus-circle", "plus-square"], "プラス": ["plus"],
+      "保存": ["save"], "キャンセル": ["x", "x-circle"],
+      "戻る": ["arrow-left", "chevron-left", "undo", "undo-2"],
+      "進む": ["arrow-right", "chevron-right", "redo", "redo-2"],
+      "上": ["arrow-up", "chevron-up"], "下": ["arrow-down", "chevron-down"],
+      "左": ["arrow-left", "chevron-left"], "右": ["arrow-right", "chevron-right"],
+      "矢印": ["arrow-up", "arrow-down", "arrow-left", "arrow-right", "move-up", "move-down"],
+      "チェック": ["check", "check-circle", "check-square", "circle-check", "square-check"],
+      "警告": ["alert-triangle", "alert-circle", "alert-octagon", "triangle-alert"],
+      "エラー": ["x-circle", "x-octagon", "alert-octagon", "circle-x"],
+      "情報": ["info"], "ヘルプ": ["help-circle", "circle-help"], "質問": ["help-circle", "circle-help"],
+      "メール": ["mail", "mail-open", "send"], "電話": ["phone", "phone-call"],
+      "メッセージ": ["message-square", "message-circle"], "チャット": ["message-circle", "message-square"],
+      "コメント": ["message-square", "message-circle"], "送信": ["send"], "受信": ["inbox"],
+      "下書き": ["file-edit", "edit-3"], "アーカイブ": ["archive"],
+      "カレンダー": ["calendar", "calendar-days"], "時計": ["clock", "watch", "timer", "alarm-clock"],
+      "履歴": ["history", "clock"], "タグ": ["tag", "tags"],
+      "鍵": ["key", "lock", "unlock"], "ロック": ["lock", "lock-keyhole"],
+      "ロック解除": ["unlock"], "プライベート": ["lock", "eye-off"], "公開": ["globe", "earth", "share"],
+      "共有": ["share", "share-2", "send"],
+      "ダウンロード": ["download", "download-cloud"], "アップロード": ["upload", "upload-cloud"],
+      "コピー": ["copy", "copy-check", "copy-plus"],
+      "開く": ["external-link", "expand", "maximize"], "閉じる": ["x", "minimize"],
+      "ファイル": ["file", "file-text", "files"], "フォルダ": ["folder", "folders", "folder-open"],
+      "画像": ["image", "images"], "写真": ["camera", "image"],
+      "動画": ["video", "film", "play"], "音楽": ["music", "headphones"],
+      "音": ["volume", "volume-1", "volume-2", "volume-x"],
+      "リンク": ["link", "link-2"], "スター": ["star", "stars"], "星": ["star"],
+      "ハート": ["heart"], "心臓": ["heart"],
+      "賛成": ["thumbs-up"], "反対": ["thumbs-down"], "良い": ["thumbs-up"], "悪い": ["thumbs-down"],
+      "笑顔": ["smile"], "悲しい": ["frown"], "怒り": ["angry"], "感情": ["smile", "frown", "meh"],
+      "グラフ": ["bar-chart", "bar-chart-2", "line-chart", "pie-chart"],
+      "チャート": ["bar-chart", "line-chart", "pie-chart"], "統計": ["bar-chart", "trending-up"],
+      "リスト": ["list", "list-checks", "list-ordered"], "表": ["table"],
+      "地図": ["map", "map-pin"], "ピン": ["pin", "map-pin"], "場所": ["map-pin", "map"],
+      "ナビ": ["navigation", "compass"], "コンパス": ["compass"],
+      "ショッピング": ["shopping-cart", "shopping-bag", "store"], "カート": ["shopping-cart"],
+      "クレジットカード": ["credit-card"], "金": ["dollar-sign", "yen", "wallet"],
+      "ニュース": ["newspaper"], "記事": ["file-text", "newspaper", "scroll"],
+      "本": ["book", "book-open"], "ノート": ["notebook", "book", "file-text"],
+      "クリップボード": ["clipboard", "clipboard-copy", "clipboard-list"], "印刷": ["printer"],
+      "AI": ["bot", "brain", "sparkles"], "ロボット": ["bot"], "脳": ["brain", "brain-circuit"],
+      "目": ["eye", "eye-off"], "耳": ["ear"],
+      "天気": ["cloud", "sun", "moon", "cloud-rain", "cloud-snow"],
+      "太陽": ["sun"], "月": ["moon"], "雲": ["cloud"], "雨": ["cloud-rain", "cloud-drizzle"],
+      "雪": ["cloud-snow", "snowflake"], "火": ["flame"], "水": ["droplet", "droplets"],
+      "車": ["car"], "飛行機": ["plane"], "電車": ["train", "train-track"], "自転車": ["bike"],
+      "歩く": ["footprints"], "走る": ["zap"],
+      "電源": ["power", "power-off"], "プラグ": ["plug", "plug-2"], "電池": ["battery", "battery-charging"],
+      "バッテリー": ["battery"], "充電": ["battery-charging", "plug"],
+      "Wifi": ["wifi", "wifi-off"], "信号": ["signal"], "Bluetooth": ["bluetooth"], "USB": ["usb"],
+      "QR": ["qr-code", "scan-line"], "QRコード": ["qr-code"], "バーコード": ["barcode"],
+      "GPS": ["map-pin", "navigation"], "言語": ["languages", "globe"], "翻訳": ["languages"],
+      "辞書": ["book-a"], "アクセシビリティ": ["accessibility"],
+      "拡大": ["zoom-in", "maximize"], "縮小": ["zoom-out", "minimize"], "全画面": ["maximize", "expand"],
+      "更新": ["refresh-cw", "refresh-ccw", "rotate-cw", "rotate-ccw"], "リフレッシュ": ["refresh-cw"],
+      "再読み込み": ["refresh-cw"], "フィルター": ["filter", "filter-x"],
+      "並び替え": ["arrow-up-down", "arrow-up-narrow-wide", "arrow-down-narrow-wide"], "ソート": ["arrow-up-down"],
+      "選択": ["check-square", "square-check"], "稲妻": ["zap"], "閃光": ["zap", "flashlight"],
+      "ライト": ["flashlight", "lamp"], "速度": ["gauge", "zap"],
+      "コード": ["code", "code-2", "terminal"], "ターミナル": ["terminal"],
+      "サーバー": ["server", "database"], "データベース": ["database"], "クラウド": ["cloud"],
+      "丸": ["circle"], "四角": ["square"], "三角": ["triangle"],
+      "点": ["dot", "ellipsis", "circle"], "ドット": ["circle", "ellipsis", "dot"]
+    };
+
+    function expandJapaneseQuery(q) {
+      // For each Japanese term in JP_TAGS that matches the query, return the union of mapped IDs.
+      const matches = new Set();
+      const lower = q.toLowerCase();
+      for (const [jp, ids] of Object.entries(JP_TAGS)) {
+        if (lower.includes(jp.toLowerCase())) ids.forEach((id) => matches.add(id));
+      }
+      return Array.from(matches);
+    }
+
+    // ---------- Format conversion helpers (multi-format export) ----------
+    function svgKebabToCamel(svg) {
+      // Convert kebab-case SVG attrs to camelCase for React JSX compatibility.
+      const map = {
+        "stroke-width": "strokeWidth", "stroke-linecap": "strokeLinecap",
+        "stroke-linejoin": "strokeLinejoin", "stroke-dasharray": "strokeDasharray",
+        "stroke-dashoffset": "strokeDashoffset", "stroke-miterlimit": "strokeMiterlimit",
+        "stroke-opacity": "strokeOpacity", "fill-rule": "fillRule", "fill-opacity": "fillOpacity",
+        "clip-rule": "clipRule", "clip-path": "clipPath",
+        "vector-effect": "vectorEffect", "shape-rendering": "shapeRendering",
+        "text-anchor": "textAnchor", "font-family": "fontFamily", "font-size": "fontSize",
+        "font-weight": "fontWeight", "stop-color": "stopColor", "stop-opacity": "stopOpacity",
+        "xlink:href": "xlinkHref"
+      };
+      let out = svg;
+      for (const [k, v] of Object.entries(map)) {
+        out = out.replace(new RegExp("\\b" + k + "=", "g"), v + "=");
+      }
+      return out;
+    }
+    function buildJsxComponent(svg, name) {
+      const camelSvg = svgKebabToCamel(svg)
+        .replace(/\sclass=/g, " className=")
+        .replace(/^<svg /, "<svg {...props} ");
+      return `import * as React from "react";\n\nexport const ${pascalCase(name)} = (props: React.SVGProps<SVGSVGElement>) => (\n  ${camelSvg}\n);\n\nexport default ${pascalCase(name)};\n`;
+    }
+    function buildVueComponent(svg, name) {
+      const inner = svg.replace(/^<svg /, "<svg v-bind=\"$attrs\" ");
+      // NOTE: "<\/script>" escaping prevents the HTML parser from prematurely
+      // closing this inline <script> tag when this string is read at runtime.
+      return `<template>\n  ${inner}\n</template>\n\n<` + `script setup lang="ts">\n// ${pascalCase(name)}.vue — generated by Icon Explorer\n<` + `/script>\n`;
+    }
+    function buildSvelteComponent(svg, name) {
+      return `<!-- ${pascalCase(name)}.svelte — generated by Icon Explorer -->\n<` + `script lang="ts">\n  // Pass any svg attribute as a prop, e.g. <${pascalCase(name)} class="..." />\n<` + `/script>\n\n${svg.replace(/^<svg /, "<svg {...$$$props} ")}\n`;
+    }
+    function buildHtmlImg(svg, name) {
+      const dataUri = "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+      return `<img src="${dataUri}" alt="${escapeAttr(name)}" width="24" height="24" />`;
+    }
+    async function svgToPngBlob(svgString, targetSize) {
+      // Render SVG to PNG via canvas. Returns Blob.
+      const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      try {
+        const img = await new Promise((resolve, reject) => {
+          const i = new Image();
+          i.onload = () => resolve(i);
+          i.onerror = (e) => reject(new Error("SVG image load failed"));
+          i.src = url;
+        });
+        const canvas = document.createElement("canvas");
+        canvas.width = targetSize;
+        canvas.height = targetSize;
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, targetSize, targetSize);
+        ctx.drawImage(img, 0, 0, targetSize, targetSize);
+        return await new Promise((resolve, reject) => {
+          canvas.toBlob((b) => b ? resolve(b) : reject(new Error("toBlob failed")), "image/png");
+        });
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    }
+    async function copyTextOrBlobToClipboard(payload) {
+      if (typeof payload === "string") {
+        await navigator.clipboard.writeText(payload);
+        return;
+      }
+      // Blob path (PNG)
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ [payload.type]: payload })]);
+      } catch (e) {
+        // Fallback: trigger a download
+        const url = URL.createObjectURL(payload);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "icon.png";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
     }
 
     // ---------- Lucide SVG build (direct) ----------
@@ -389,6 +585,7 @@
       useAllLucide: true,
       page: 1,
       pageSize: 240,
+      copyFormat: "svg",
 
       // iconify
       iconifyPrefix: "mdi",
@@ -400,6 +597,97 @@
 
       spriteUrl: null
     };
+
+    // ---------- URL state sync ----------
+    // Two-way sync between state and ?query string so users can share
+    // exact configurations (search + color + size + collection + format).
+    let urlSyncSuspended = false;
+
+    function writeStateToUrl() {
+      if (urlSyncSuspended) return;
+      const p = new URLSearchParams();
+      if (state.search) p.set("q", state.search);
+      if (state.color && state.color !== "#2563EB") p.set("c", state.color.replace(/^#/, ""));
+      if (state.size !== 64) p.set("s", String(state.size));
+      if (Math.abs(state.width - 1.5) > 1e-3) p.set("w", state.width.toFixed(1));
+      if (state.source !== "lucide") p.set("src", state.source);
+      if (state.source === "iconify" && state.iconifyPrefix && state.iconifyPrefix !== "mdi") {
+        p.set("set", state.iconifyPrefix);
+      }
+      if (state.page > 1) p.set("p", String(state.page));
+      if (state.pageSize !== 240) p.set("ps", String(state.pageSize));
+      if (state.copyFormat && state.copyFormat !== "svg") p.set("f", state.copyFormat);
+      if (state.source === "lucide" && !state.useAllLucide) p.set("all", "0");
+
+      const qs = p.toString();
+      const newUrl = qs ? `${location.pathname}?${qs}` : location.pathname;
+      try { history.replaceState(null, "", newUrl); } catch (_) {}
+    }
+
+    function readStateFromUrl() {
+      const p = new URLSearchParams(location.search);
+      const get = (k) => p.get(k);
+
+      if (get("q")) state.search = get("q");
+      if (get("c")) {
+        const c = get("c");
+        state.color = c.startsWith("#") ? c : ("#" + c);
+      }
+      if (get("s")) {
+        const n = Number(get("s"));
+        if (Number.isFinite(n) && n >= 16 && n <= 256) state.size = n;
+      }
+      if (get("w")) {
+        const n = Number(get("w"));
+        if (Number.isFinite(n) && n >= 0.5 && n <= 3) state.width = n;
+      }
+      if (get("src")) {
+        const s = get("src");
+        if (s === "lucide" || s === "iconify") state.source = s;
+      }
+      if (get("set")) state.iconifyPrefix = get("set");
+      if (get("p")) {
+        const n = parseInt(get("p"), 10);
+        if (Number.isFinite(n) && n > 0) state.page = n;
+      }
+      if (get("ps")) {
+        const n = parseInt(get("ps"), 10);
+        if (Number.isFinite(n) && [120, 240, 480, 960].includes(n)) state.pageSize = n;
+      }
+      if (get("f")) {
+        const f = get("f");
+        if (["svg","jsx","vue","svelte","html","png-1x","png-2x","png-3x"].includes(f)) {
+          state.copyFormat = f;
+        }
+      }
+      if (get("all") === "0") state.useAllLucide = false;
+    }
+
+    function applyStateToControls() {
+      // Reflect state back to UI controls (used after readStateFromUrl on init).
+      searchInput.value = state.search || "";
+      colorPicker.value = state.color;
+      colorText.value = state.color;
+      widthSlider.value = String(state.width);
+      widthValue.textContent = Number(state.width).toFixed(1);
+      sizeSlider.value = String(state.size);
+      sizeValue.textContent = String(state.size);
+      pageSizeSelect.value = String(state.pageSize);
+      allIconsToggle.checked = !!state.useAllLucide;
+      copyFormatSelect.value = state.copyFormat || "svg";
+      sourceSelect.value = state.source;
+      if (state.source === "iconify") {
+        iconifyControls.classList.remove("hidden");
+        const exists = Array.from(iconifyPrefixSelect.options).some((o) => o.value === state.iconifyPrefix);
+        if (exists) {
+          iconifyPrefixSelect.value = state.iconifyPrefix;
+        } else {
+          iconifyPrefixSelect.value = "_custom";
+          iconifyPrefixCustom.classList.remove("hidden");
+          iconifyPrefixCustom.value = state.iconifyPrefix;
+        }
+      }
+    }
 
     // ---------- DOM ----------
     const grid = document.getElementById("icon-grid");
@@ -436,6 +724,7 @@
     const iconifyMeta = document.getElementById("iconify-meta");
     const colorNote = document.getElementById("color-note");
     const retestBtn = document.getElementById("retest-btn");
+    const copyFormatSelect = document.getElementById("copy-format");
 
     let previewObserver = null;
 
@@ -478,15 +767,30 @@
     }
 
     function filterList(base) {
-      const q = state.search.trim().toLowerCase();
+      const q = state.search.trim();
+      const lq = q.toLowerCase();
       if (state.source === "lucide" && state.useAllLucide && !q) allIconsHint.classList.remove("hidden");
       else allIconsHint.classList.add("hidden");
 
       if (!q) return base;
+
+      // Japanese tag expansion: when query contains Japanese characters,
+      // expand to mapped Lucide IDs and OR the result with substring match.
+      const jpExpansion = isJapanese(q) ? expandJapaneseQuery(q) : [];
+      if (jpExpansion.length > 0) {
+        return base.filter((icon) => {
+          const id = icon.id.toLowerCase();
+          const name = String(icon.name).toLowerCase();
+          // For Iconify, ids are "prefix:name" — match against the bare name part too.
+          const bare = id.includes(":") ? id.split(":").slice(1).join(":") : id;
+          return jpExpansion.some((tag) => bare === tag || bare.includes(tag) || id.includes(tag) || name.includes(tag));
+        });
+      }
+
       return base.filter((icon) => {
         const id = icon.id.toLowerCase();
         const name = String(icon.name).toLowerCase();
-        return id.includes(q) || name.includes(q);
+        return id.includes(lq) || name.includes(lq);
       });
     }
 
@@ -496,19 +800,37 @@
       return '';
     }
 
-    async function copySvgForItem(item) {
+    async function getSvgForItem(item) {
       if (state.source === "lucide") {
         const svg = buildLucideSvgString(item.id, { width: 24, height: 24, stroke: state.color, strokeWidth: state.width });
         if (!svg) throw new Error("Lucide icon not found");
-        await navigator.clipboard.writeText(svg);
-        return;
+        return svg;
       }
-      // Iconify: prefer iconify-icon's rendered SVG is in shadow DOM, so fetch from API for reliable copy.
       const url = `${ICONIFY_API}/${encodeURIComponent(state.iconifyPrefix)}/${encodeURIComponent(item.name)}.svg?color=${encodeURIComponent(state.color)}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error(`Iconify SVG fetch failed: ${res.status}`);
-      const svg = await res.text();
-      await navigator.clipboard.writeText(svg);
+      return await res.text();
+    }
+
+    async function copyForItem(item) {
+      const svg = await getSvgForItem(item);
+      const fmt = state.copyFormat || "svg";
+      const niceName = item.name || item.id;
+
+      if (fmt === "svg") return copyTextOrBlobToClipboard(svg);
+      if (fmt === "jsx") return copyTextOrBlobToClipboard(buildJsxComponent(svg, niceName));
+      if (fmt === "vue") return copyTextOrBlobToClipboard(buildVueComponent(svg, niceName));
+      if (fmt === "svelte") return copyTextOrBlobToClipboard(buildSvelteComponent(svg, niceName));
+      if (fmt === "html") return copyTextOrBlobToClipboard(buildHtmlImg(svg, niceName));
+
+      if (fmt.startsWith("png-")) {
+        const scale = Number(fmt.split("-")[1].replace("x", "")) || 1;
+        const blob = await svgToPngBlob(svg, state.size * scale);
+        return copyTextOrBlobToClipboard(blob);
+      }
+
+      // Fallback
+      return copyTextOrBlobToClipboard(svg);
     }
 
     function resetObserver() {
@@ -550,6 +872,8 @@
       const pageSize = Math.max(1, Number(state.pageSize) || 240);
       const totalPages = Math.max(1, Math.ceil(totalMatches / pageSize));
       state.page = Math.min(Math.max(1, Number(state.page) || 1), totalPages);
+      // Sync URL after page clamp so it reflects actual rendered state.
+      writeStateToUrl();
       pageInput.value = state.page;
       totalPagesEl.textContent = String(totalPages);
 
@@ -617,7 +941,7 @@
         copyBtn.addEventListener("click", async (e) => {
           e.stopPropagation();
           try {
-            await copySvgForItem(item);
+            await copyForItem(item);
             copyBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i>';
             if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
             setTimeout(() => {
@@ -899,6 +1223,49 @@
       if (state.source === "iconify") await testIconifyHealth();
     });
 
+    copyFormatSelect.addEventListener("change", (e) => {
+      state.copyFormat = e.target.value;
+      writeStateToUrl();
+    });
+
+    // ---------- Keyboard shortcuts ----------
+    window.addEventListener("keydown", (e) => {
+      const ae = document.activeElement;
+      const inField = ae && (ae.tagName === "INPUT" || ae.tagName === "TEXTAREA" || ae.isContentEditable);
+
+      // "/" — focus search (Linear/Vercel-style)
+      if (e.key === "/" && !inField && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        searchInput.focus();
+        searchInput.select();
+        return;
+      }
+      // Cmd/Ctrl+K — focus search
+      if (e.key.toLowerCase() === "k" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        searchInput.focus();
+        searchInput.select();
+        return;
+      }
+      // Esc — clear search and blur, or close sets modal
+      if (e.key === "Escape") {
+        if (!modal.classList.contains("hidden")) {
+          closeModal();
+          return;
+        }
+        if (ae === searchInput) {
+          if (state.search) {
+            state.search = "";
+            searchInput.value = "";
+            state.page = 1;
+            render();
+          } else {
+            searchInput.blur();
+          }
+        }
+      }
+    });
+
     downloadAllBtn.addEventListener("click", async () => {
       const base = getBaseList();
       const filtered = filterList(base);
@@ -967,11 +1334,29 @@
 
     // ---------- Init ----------
     window.addEventListener("load", async () => {
+      // Defaults from controls
       state.useAllLucide = allIconsToggle.checked;
       state.pageSize = Number(pageSizeSelect.value) || state.pageSize;
+
+      // Override with URL params if present (suspend writeStateToUrl during application)
+      urlSyncSuspended = true;
+      try {
+        readStateFromUrl();
+        applyStateToControls();
+      } finally {
+        urlSyncSuspended = false;
+      }
+
       widthValue.textContent = Number(state.width).toFixed(1);
       sizeValue.textContent = String(state.size);
-      await render();
+
+      // If source is iconify, load that collection (calls render internally)
+      if (state.source === "iconify") {
+        await testIconifyHealth();
+        await loadIconifyPrefix(state.iconifyPrefix || "mdi");
+      } else {
+        await render();
+      }
       // Pre-test iconify in background is avoided; only test when switching to iconify.
     });
   </script>

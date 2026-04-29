@@ -1,7 +1,7 @@
 {
   "name": "icon-explorer",
-  "version": "0.1.0",
-  "description": "A free, fast icon browser for Lucide and Iconify. Search, customize, copy SVG, export sprites.",
+  "version": "0.2.0",
+  "description": "A free, fast icon browser for Lucide and Iconify. Multi-format copy (React/Vue/Svelte/PNG), Japanese tag search, shareable URLs, keyboard shortcuts.",
   "private": true,
   "type": "module",
   "homepage": "https://icons.tsuchiyalab.com",
