@@ -710,18 +710,46 @@
     }
 
     function buildLucideSpriteString(iconIds) {
-      const symbols = iconIds
-        .filter((id) => window.lucide && window.lucide.icons && window.lucide.icons[id])
-        .map((id) => {
-          const nodes = window.lucide.icons[id];
-          const body = nodes.map(([tag, nodeAttrs]) => {
-            const a = Object.entries(nodeAttrs).map(([k,v]) => `${k}="${escapeAttr(v)}"`).join(" ");
-            return `<${tag} ${a} />`;
-          }).join("");
-          return `<symbol id="lucide-${id}" viewBox="0 0 24 24">${body}</symbol>`;
-        })
-        .join("");
-      return `<svg xmlns="http://www.w3.org/2000/svg" style="display:none">${symbols}</svg>`;
+      const ids = iconIds.filter((id) => window.lucide && window.lucide.icons && window.lucide.icons[id]);
+      if (ids.length === 0) return null;
+      const symbols = ids.map((id) => {
+        const nodes = window.lucide.icons[id];
+        const body = nodes.map(([tag, nodeAttrs]) => {
+          const a = Object.entries(nodeAttrs).map(([k,v]) => `${k}="${escapeAttr(v)}"`).join(" ");
+          return `<${tag} ${a} />`;
+        }).join("");
+        return `<symbol id="lucide-${id}" viewBox="0 0 24 24">${body}</symbol>`;
+      }).join("");
+      // Visible preview grid so the file shows something when opened directly,
+      // while symbols remain accessible via <use href="this.svg#lucide-{name}">.
+      const cell = 28, icon = 24, pad = (cell - icon) / 2;
+      const cols = 32;
+      const rows = Math.ceil(ids.length / cols);
+      const headerH = 56;
+      const w = cols * cell;
+      const h = headerH + rows * cell + 16;
+      const uses = ids.map((id, i) => {
+        const x = (i % cols) * cell + pad;
+        const y = headerH + Math.floor(i / cols) * cell + pad;
+        return `<use href="#lucide-${id}" x="${x}" y="${y}" width="${icon}" height="${icon}"/>`;
+      }).join("");
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">
+<style>
+  rect.bg{fill:#ffffff}
+  text.title{font:600 14px ui-sans-serif,system-ui,sans-serif;fill:#111}
+  text.note{font:11px ui-sans-serif,system-ui,sans-serif;fill:#666}
+  .lucide-icons{fill:none;stroke:#111;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+  @media (prefers-color-scheme: dark){
+    rect.bg{fill:#0a0a0a} text.title{fill:#f5f5f3} text.note{fill:#8c8c8c}
+    .lucide-icons{stroke:#f5f5f3}
+  }
+</style>
+<rect class="bg" x="0" y="0" width="${w}" height="${h}"/>
+<text class="title" x="14" y="26">Lucide · ${ids.length} icons · Tsuchiya Lab Icon Explorer</text>
+<text class="note" x="14" y="44">Reference any symbol via &lt;use href="this-file.svg#lucide-{name}"/&gt;</text>
+<defs>${symbols}</defs>
+<g class="lucide-icons">${uses}</g>
+</svg>`;
     }
 
     // ---------- Iconify helpers ----------
@@ -1574,6 +1602,7 @@
       downloadAllBtn.disabled = true;
       try {
         const symbols = [];
+        const symbolIds = [];
         const limit = 8;
         let idx = 0;
 
@@ -1595,11 +1624,39 @@
             const body = svgEl.innerHTML || "";
             const symbolId = `iconify-${pfx}-${name}`;
             symbols.push(`<symbol id="${escapeAttr(symbolId)}" viewBox="${escapeAttr(viewBox)}">${body}</symbol>`);
+            symbolIds.push(symbolId);
           }
         }
 
         await Promise.all(new Array(limit).fill(0).map(worker));
-        const sprite = `<svg xmlns="http://www.w3.org/2000/svg" style="display:none">${symbols.join("")}</svg>`;
+        // Build visible preview grid like the Lucide sprite, so opening the
+        // file directly shows the icons. Symbols remain accessible via <use>.
+        const cell = 28, icon = 24, pad = (cell - icon) / 2;
+        const cols = 32;
+        const rows = Math.ceil(symbolIds.length / cols);
+        const headerH = 56;
+        const w = cols * cell;
+        const h = headerH + rows * cell + 16;
+        const uses = symbolIds.map((sid, i) => {
+          const x = (i % cols) * cell + pad;
+          const y = headerH + Math.floor(i / cols) * cell + pad;
+          return `<use href="#${sid}" x="${x}" y="${y}" width="${icon}" height="${icon}"/>`;
+        }).join("");
+        const sprite = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">
+<style>
+  rect.bg{fill:#ffffff}
+  text.title{font:600 14px ui-sans-serif,system-ui,sans-serif;fill:#111}
+  text.note{font:11px ui-sans-serif,system-ui,sans-serif;fill:#666}
+  @media (prefers-color-scheme: dark){
+    rect.bg{fill:#0a0a0a} text.title{fill:#f5f5f3} text.note{fill:#8c8c8c}
+  }
+</style>
+<rect class="bg" x="0" y="0" width="${w}" height="${h}"/>
+<text class="title" x="14" y="26">Iconify · ${state.iconifyPrefix} · ${symbolIds.length} icons · Tsuchiya Lab Icon Explorer</text>
+<text class="note" x="14" y="44">Reference any symbol via &lt;use href="this-file.svg#iconify-${state.iconifyPrefix}-{name}"/&gt;</text>
+<defs>${symbols.join("")}</defs>
+${uses}
+</svg>`;
         const blob = new Blob([sprite], { type: "image/svg+xml;charset=utf-8" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
