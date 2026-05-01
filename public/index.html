@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -23,15 +23,79 @@
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     /* CHANEL × Vercel palette — black-and-white first, with sparing graphite-blue accent.
        Aligned with tsuchiyalab.com design.md (editorial restraint + tech precision). */
-    :root {
+    :root, [data-theme="light"] {
       --tl-fg: #111111;
       --tl-fg-soft: #5C5C5C;
+      --tl-fg-mute: #9C9C9C;
       --tl-line: rgba(17,17,17,0.10);
+      --tl-line-soft: rgba(17,17,17,0.06);
       --tl-bg: #FFFFFF;
       --tl-surface: #F7F7F5;
+      --tl-surface-2: #EFEFEA;
+      --tl-card: #FFFFFF;
+      --tl-input: #FFFFFF;
       --tl-accent: #2E3B4A;        /* graphite-blue, used sparingly */
       --tl-accent-soft: #A9B7C8;   /* silver-blue */
+      --tl-primary-bg: #111111;    /* primary button bg */
+      --tl-primary-fg: #FFFFFF;    /* primary button text */
     }
+    /* Dark theme — inverse of CHANEL editorial.
+       Matches tsuchiyalab.com main LP convention for theme toggle. */
+    [data-theme="dark"] {
+      --tl-fg: #F5F5F3;
+      --tl-fg-soft: #B0B0B0;
+      --tl-fg-mute: #707070;
+      --tl-line: rgba(255,255,255,0.10);
+      --tl-line-soft: rgba(255,255,255,0.06);
+      --tl-bg: #0A0A0A;
+      --tl-surface: #161616;
+      --tl-surface-2: #1F1F1F;
+      --tl-card: #121212;
+      --tl-input: rgba(20,20,20,0.7);
+      --tl-accent: #A9B7C8;
+      --tl-accent-soft: #5B6D82;
+      --tl-primary-bg: #F5F5F3;
+      --tl-primary-fg: #0A0A0A;
+    }
+    /* Map common Tailwind utility classes to theme variables in dark mode.
+       This keeps the markup unchanged while letting CSS variables flow through. */
+    [data-theme="dark"] .bg-white { background-color: var(--tl-card) !important; }
+    [data-theme="dark"] .bg-gray-50 { background-color: var(--tl-surface) !important; }
+    [data-theme="dark"] .bg-gray-100 { background-color: var(--tl-surface-2) !important; }
+    [data-theme="dark"] .bg-gray-900 { background-color: var(--tl-primary-bg) !important; color: var(--tl-primary-fg) !important; }
+    [data-theme="dark"] .hover\:bg-gray-50:hover { background-color: rgba(255,255,255,0.06) !important; }
+    [data-theme="dark"] .hover\:bg-gray-100:hover { background-color: rgba(255,255,255,0.10) !important; }
+    [data-theme="dark"] .hover\:bg-black:hover { background-color: #ffffff !important; color: #000000 !important; }
+    [data-theme="dark"] .border-gray-100 { border-color: var(--tl-line-soft) !important; }
+    [data-theme="dark"] .border-gray-200 { border-color: var(--tl-line) !important; }
+    [data-theme="dark"] .border-gray-300 { border-color: rgba(255,255,255,0.18) !important; }
+    [data-theme="dark"] .text-gray-900 { color: var(--tl-fg) !important; }
+    [data-theme="dark"] .text-gray-800 { color: #D8D8D8 !important; }
+    [data-theme="dark"] .text-gray-700 { color: #C0C0C0 !important; }
+    [data-theme="dark"] .text-gray-600 { color: #A8A8A8 !important; }
+    [data-theme="dark"] .text-gray-500 { color: var(--tl-fg-soft) !important; }
+    [data-theme="dark"] .text-gray-400 { color: var(--tl-fg-mute) !important; }
+    [data-theme="dark"] .text-gray-300 { color: #4A4A4A !important; }
+    [data-theme="dark"] .hover\:text-gray-900:hover { color: var(--tl-fg) !important; }
+    [data-theme="dark"] .hover\:text-gray-700:hover { color: #C8C8C8 !important; }
+    [data-theme="dark"] .hover\:border-gray-900:hover { border-color: var(--tl-fg) !important; }
+    [data-theme="dark"] .focus\:ring-gray-900:focus { --tw-ring-color: var(--tl-fg) !important; }
+    [data-theme="dark"] .focus\:border-gray-900:focus { border-color: var(--tl-fg) !important; }
+    [data-theme="dark"] input[type="text"]:not([type="color"]),
+    [data-theme="dark"] input[type="number"],
+    [data-theme="dark"] select,
+    [data-theme="dark"] textarea {
+      background-color: var(--tl-input) !important;
+      color: var(--tl-fg);
+    }
+    [data-theme="dark"] input::placeholder { color: var(--tl-fg-mute) !important; }
+    [data-theme="dark"] input[type="range"]::-webkit-slider-runnable-track { background: rgba(255,255,255,0.12); }
+    [data-theme="dark"] input[type="checkbox"] { accent-color: var(--tl-fg); }
+    [data-theme="dark"] .modal-backdrop { background: rgba(0, 0, 0, 0.65); }
+    [data-theme="dark"] .icon-card-bg { background: var(--tl-surface) !important; }
+    [data-theme="dark"] .group:hover .icon-card-bg { background: var(--tl-surface-2) !important; }
+    [data-theme="dark"] .text-emerald-700 { color: #10B981 !important; }
+    [data-theme="dark"] .text-rose-700 { color: #F87171 !important; }
     body {
       font-family: 'Inter', -apple-system, "Helvetica Neue", sans-serif;
       background: var(--tl-bg);
@@ -60,6 +124,9 @@
        Following tsuchiyalab.com LP convention. */
     [lang="en"] .jp { display: none !important; }
     [lang="ja"] .en { display: none !important; }
+    /* Theme-conditional spans — used in theme toggle button label */
+    [data-theme="light"] .theme-dark-only { display: none !important; }
+    [data-theme="dark"] .theme-light-only { display: none !important; }
     /* Icon mark (TL monogram) — uses mask-image so currentColor controls fill.
        This way the mark inverts cleanly when the page theme switches between
        light and dark, matching the wordmark text. */
@@ -88,13 +155,17 @@
           <span id="source-badge" class="text-gray-700 font-medium">Lucide</span>
           <span id="collection-badge" class="text-gray-400 font-normal"></span>
         </h1>
-        <p class="text-sm text-gray-500 mt-2 max-w-xl">
-          <span class="en">Browse and copy 200,000+ icons from Lucide and Iconify. Multi-format export, Japanese tag search, shareable URLs.</span>
-          <span class="jp">Lucide と Iconify から20万件以上のアイコンを検索・コピー。多形式書き出し・日本語タグ検索・URL共有に対応。</span>
+        <p class="text-sm text-gray-500 mt-2 max-w-xl leading-relaxed">
+          <span class="en">Browse and copy 200,000+ icons from Lucide and Iconify.<br />Multi-format export, Japanese tag search, shareable URLs.</span>
+          <span class="jp">Lucide と Iconify から20万件以上のアイコンを検索・コピー。<br />多形式書き出し・日本語タグ検索・URL共有に対応。</span>
         </p>
         <p id="status-line" class="text-xs text-gray-500 mt-2 hidden"></p>
       </div>
       <div class="shrink-0 flex items-center gap-2">
+        <button id="theme-toggle" class="text-xs px-2.5 py-2 rounded-lg border border-gray-200 bg-white hover:border-gray-900 transition-colors font-medium tracking-wide" aria-label="Toggle theme">
+          <span class="theme-light-only"><span class="en">Dark</span><span class="jp">ダーク</span></span>
+          <span class="theme-dark-only"><span class="en">Light</span><span class="jp">ライト</span></span>
+        </button>
         <button id="lang-toggle" class="text-xs px-2.5 py-2 rounded-lg border border-gray-200 bg-white hover:border-gray-900 transition-colors font-medium tracking-wide" aria-label="Toggle language">
           <span class="en">日本語</span>
           <span class="jp">English</span>
@@ -410,6 +481,31 @@
       const dlBtn = document.getElementById("download-all-btn");
       if (dlBtn) dlBtn.title = next === "ja" ? "現在のフィルタ条件でスプライトをDL" : "Download a sprite of the current filtered set";
     }
+
+    // ---------- Theme (light/dark) ----------
+    // Theme toggle controlled via [data-theme] on html. CSS variables flip
+    // automatically (see :root vs [data-theme="dark"] above). Default icon
+    // color also auto-flips ONLY when it is still the previous theme's
+    // default (so user-customized colors persist across theme toggles).
+    const THEME_DEFAULT_COLOR = { light: "#111111", dark: "#F5F5F3" };
+    function currentTheme() {
+      return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+    }
+    function applyTheme(theme) {
+      const next = theme === "dark" ? "dark" : "light";
+      const prev = currentTheme();
+      document.documentElement.dataset.theme = next;
+      try { localStorage.setItem("icons.theme", next); } catch (_) {}
+      // Auto-flip default icon color when toggling, preserving custom colors.
+      const prevDefault = THEME_DEFAULT_COLOR[prev].toUpperCase();
+      if (state && state.color && state.color.toUpperCase() === prevDefault && prev !== next) {
+        state.color = THEME_DEFAULT_COLOR[next];
+        const cp = document.getElementById("color-picker");
+        const ct = document.getElementById("color-text");
+        if (cp) cp.value = state.color;
+        if (ct) ct.value = state.color;
+      }
+    }
     function isJapanese(s) {
       return /[぀-ヿ㐀-鿿ｦ-ﾟ]/.test(s);
     }
@@ -721,7 +817,10 @@
       if (urlSyncSuspended) return;
       const p = new URLSearchParams();
       if (state.search) p.set("q", state.search);
-      if (state.color && state.color !== "#111111") p.set("c", state.color.replace(/^#/, ""));
+      // Color is omitted from URL when it matches the current theme's default
+      // (so URLs stay clean across theme toggles).
+      const themeDefault = THEME_DEFAULT_COLOR[currentTheme()].toUpperCase();
+      if (state.color && state.color.toUpperCase() !== themeDefault) p.set("c", state.color.replace(/^#/, ""));
       if (state.size !== 64) p.set("s", String(state.size));
       if (Math.abs(state.width - 1.5) > 1e-3) p.set("w", state.width.toFixed(1));
       if (state.source !== "lucide") p.set("src", state.source);
@@ -733,6 +832,7 @@
       if (state.copyFormat && state.copyFormat !== "svg") p.set("f", state.copyFormat);
       if (state.source === "lucide" && !state.useAllLucide) p.set("all", "0");
       if (currentLang() === "ja") p.set("lang", "ja");
+      if (currentTheme() === "dark") p.set("theme", "dark");
 
       const qs = p.toString();
       const newUrl = qs ? `${location.pathname}?${qs}` : location.pathname;
@@ -787,6 +887,25 @@
         } catch (_) {}
       }
       if (langPick) applyLanguage(langPick);
+
+      // Theme: URL > localStorage > default "light"
+      let themePick = null;
+      if (get("theme") === "dark" || get("theme") === "light") themePick = get("theme");
+      else {
+        try {
+          const saved = localStorage.getItem("icons.theme");
+          if (saved === "dark" || saved === "light") themePick = saved;
+        } catch (_) {}
+      }
+      if (themePick) applyTheme(themePick);
+
+      // After theme is applied, if URL specifies neither theme nor color but
+      // resolved theme is dark, default color should be the dark default.
+      // (applyTheme already handles the flip from prev=light → next=dark when
+      // state.color is the previous default, so this only matters for first init.)
+      if (themePick === "dark" && !get("c") && state.color === "#111111") {
+        state.color = "#F5F5F3";
+      }
     }
 
     function applyStateToControls() {
@@ -1364,6 +1483,17 @@
         const next = currentLang() === "ja" ? "en" : "ja";
         applyLanguage(next);
         writeStateToUrl();
+      });
+    }
+
+    // Theme toggle (light/dark)
+    const themeToggleBtn = document.getElementById("theme-toggle");
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener("click", () => {
+        const next = currentTheme() === "dark" ? "light" : "dark";
+        applyTheme(next);
+        // Re-render so icon previews pick up the (possibly auto-flipped) color
+        render();
       });
     }
 
