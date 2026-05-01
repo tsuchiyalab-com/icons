@@ -139,10 +139,138 @@
               mask: url('/tsuchiyalab-mark.svg') no-repeat center / contain;
       flex-shrink: 0;
     }
+    /* ────────── Polish layer ────────── */
+    /* Smooth theme transitions on the surfaces that flip color. */
+    body, .bg-white, .bg-gray-50, .bg-gray-100, .icon-card-bg, .modal-backdrop,
+    input, select, textarea, button, .border-gray-100, .border-gray-200 {
+      transition: background-color .25s ease, color .25s ease, border-color .25s ease;
+    }
+    /* Slim mini-header — appears once user scrolls past the main header. */
+    .mini-header {
+      position: fixed; top: 0; left: 0; right: 0; height: 48px; z-index: 60;
+      background: color-mix(in srgb, var(--tl-bg) 88%, transparent);
+      backdrop-filter: saturate(140%) blur(14px);
+      -webkit-backdrop-filter: saturate(140%) blur(14px);
+      border-bottom: 1px solid var(--tl-line);
+      transform: translateY(-100%); opacity: 0;
+      transition: transform .25s var(--tl-ease, ease), opacity .25s ease;
+      pointer-events: none;
+    }
+    .mini-header.visible { transform: translateY(0); opacity: 1; pointer-events: auto; }
+    .mini-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 5px 9px; font-size: 11px; font-weight: 500; letter-spacing: 0.04em;
+      border: 1px solid var(--tl-line); border-radius: 7px;
+      background: var(--tl-bg); color: var(--tl-fg-soft);
+      transition: border-color .15s, color .15s;
+    }
+    .mini-btn:hover { border-color: var(--tl-fg); color: var(--tl-fg); }
+    .mini-btn.primary {
+      background: var(--tl-primary-bg); color: var(--tl-primary-fg);
+      border-color: var(--tl-primary-bg);
+    }
+    .mini-btn.primary:hover { opacity: .85; }
+    /* Toast for copy feedback. */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+      padding: 9px 18px; font-size: 12px; font-weight: 500; letter-spacing: 0.02em;
+      background: var(--tl-fg); color: var(--tl-bg); border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.16);
+      opacity: 0; pointer-events: none; z-index: 70;
+      transition: opacity .2s ease, transform .25s var(--tl-ease, ease);
+    }
+    .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+    /* Empty search state. */
+    .empty-state { padding: clamp(48px, 9vw, 96px) 16px; text-align: center; color: var(--tl-fg-mute); }
+    .empty-state svg { opacity: 0.4; margin: 0 auto 16px; }
+    /* Skip link */
+    .skip-link {
+      position: absolute; top: -100px; left: 16px; z-index: 80;
+      background: var(--tl-fg); color: var(--tl-bg);
+      padding: 8px 14px; font-size: 12px; border-radius: 6px;
+      transition: top .15s ease;
+    }
+    .skip-link:focus { top: 12px; outline: none; }
+    /* Color preset swatches */
+    .color-presets { display: flex; gap: 4px; margin-top: 6px; }
+    .color-presets button {
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 1px solid var(--tl-line);
+      cursor: pointer; padding: 0;
+      transition: transform .15s, box-shadow .15s;
+    }
+    .color-presets button:hover { transform: scale(1.15); box-shadow: 0 0 0 2px var(--tl-fg) inset; }
+    .color-presets button.active { box-shadow: 0 0 0 1px var(--tl-fg), 0 0 0 3px var(--tl-bg); }
+    /* Search input clear "×" button */
+    .search-wrap { position: relative; }
+    .search-clear {
+      position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+      width: 20px; height: 20px; display: none;
+      align-items: center; justify-content: center;
+      border-radius: 50%; cursor: pointer; color: var(--tl-fg-mute);
+      background: transparent; border: none;
+      transition: background-color .15s, color .15s;
+    }
+    .search-clear:hover { background: var(--tl-line); color: var(--tl-fg); }
+    .search-wrap.has-value .search-clear { display: inline-flex; }
+    .search-wrap.has-value input { padding-right: 32px; }
   </style>
   <link rel="icon" href="/tsuchiyalab-mark.svg" type="image/svg+xml" />
+  <link rel="alternate" hreflang="en" href="https://icons.tsuchiyalab.com/" />
+  <link rel="alternate" hreflang="ja" href="https://icons.tsuchiyalab.com/?lang=ja" />
+  <link rel="alternate" hreflang="x-default" href="https://icons.tsuchiyalab.com/" />
+  <script type="application/ld+json">{
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Icon Explorer",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Web Browser",
+    "description": "A free, fast icon browser for Lucide and Iconify with multi-format copy (React, Vue, Svelte, PNG), Japanese tag search, and shareable URLs.",
+    "url": "https://icons.tsuchiyalab.com",
+    "image": "https://icons.tsuchiyalab.com/og-image.png",
+    "license": "https://opensource.org/licenses/MIT",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Tsuchiya Lab",
+      "url": "https://tsuchiyalab.com",
+      "logo": "https://icons.tsuchiyalab.com/tsuchiyalab-mark.svg"
+    },
+    "creator": {
+      "@type": "Organization",
+      "name": "Tsuchiya Lab",
+      "url": "https://tsuchiyalab.com"
+    }
+  }</script>
 </head>
 <body class="p-4 sm:p-6">
+  <a href="#main" class="skip-link"><span class="en">Skip to icons</span><span class="jp">アイコン一覧へ</span></a>
+
+  <!-- Slim mini-header (appears on scroll past main header) -->
+  <div id="mini-header" class="mini-header" aria-hidden="true">
+    <div class="max-w-7xl mx-auto h-full px-4 sm:px-6 flex items-center justify-between gap-3">
+      <a href="https://tsuchiyalab.com" target="_blank" rel="noopener" class="flex items-center gap-2 text-xs">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="font-semibold tracking-wider uppercase" style="letter-spacing:0.18em;">TSUCHIYA LAB</span>
+        <span class="text-gray-300">·</span>
+        <span class="text-gray-700 font-medium">Icon Explorer</span>
+      </a>
+      <div class="flex items-center gap-1.5">
+        <button id="mini-theme" class="mini-btn" aria-label="Toggle theme">
+          <span class="theme-light-only"><span class="en">Dark</span><span class="jp">ダーク</span></span>
+          <span class="theme-dark-only"><span class="en">Light</span><span class="jp">ライト</span></span>
+        </button>
+        <button id="mini-lang" class="mini-btn" aria-label="Toggle language">
+          <span class="en">日本語</span><span class="jp">English</span>
+        </button>
+        <button id="mini-download" class="mini-btn primary" aria-label="Download sprite">
+          <span class="en">Sprite</span><span class="jp">DL</span>
+          <span class="mini-dl-count text-[10px] opacity-70 ml-1"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="max-w-7xl mx-auto">
     <div class="flex items-start justify-between gap-3">
       <div class="min-w-0">
@@ -180,7 +308,7 @@
 
     <div class="mt-5 flex flex-col lg:flex-row gap-5">
       <!-- MAIN (order changes on small screens) -->
-      <main class="order-2 lg:order-1 flex-1 min-w-0">
+      <main id="main" class="order-2 lg:order-1 flex-1 min-w-0">
         <div class="flex items-center justify-between gap-3">
           <div class="text-xs text-gray-500">
             <span class="en">Showing</span><span class="jp">表示中</span>
@@ -202,6 +330,22 @@
         </div>
 
         <div id="icon-grid" class="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-4"></div>
+
+        <div id="empty-state" class="empty-state hidden">
+          <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="M21 21l-4.3-4.3"/>
+            <path d="M8 11h6"/>
+          </svg>
+          <p class="text-sm">
+            <span class="en">No icons match "<span class="empty-q font-medium text-gray-700"></span>"</span>
+            <span class="jp">「<span class="empty-q font-medium text-gray-700"></span>」に一致するアイコンが見つかりません</span>
+          </p>
+          <p class="text-xs mt-1 text-gray-500">
+            <span class="en">Try a different keyword, or browse the full collection.</span>
+            <span class="jp">別のキーワードでお試しください。</span>
+          </p>
+        </div>
       </main>
 
       <!-- SIDEBAR (top on small, right on large) -->
@@ -264,7 +408,12 @@
 
             <div>
               <label class="block text-xs text-gray-500 mb-1"><span class="en">Search</span><span class="jp">検索</span></label>
-              <input type="text" id="search-input" placeholder="Search icons…  (press / to focus)" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm transition-shadow" />
+              <div class="search-wrap">
+                <input type="text" id="search-input" placeholder="Search icons…  (press / to focus)" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm transition-shadow" />
+                <button type="button" id="search-clear" class="search-clear" aria-label="Clear search" tabindex="-1">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+              </div>
               <div class="mt-2 flex items-center gap-2" id="lucide-all-toggle-row">
                 <input type="checkbox" id="all-icons-toggle" class="h-4 w-4 rounded border-gray-300" checked />
                 <label for="all-icons-toggle" class="text-sm text-gray-600"><span class="en">All Lucide icons</span><span class="jp">全 Lucide アイコン</span></label>
@@ -289,6 +438,15 @@
                 <div class="flex items-center gap-2">
                   <input type="color" id="color-picker" value="#111111" />
                   <input type="text" id="color-text" value="#111111" class="w-24 px-3 py-2 border border-gray-200 rounded-lg text-sm uppercase" />
+                </div>
+                <div class="color-presets" role="group" aria-label="Color presets">
+                  <button type="button" data-color="#111111" style="background:#111111" title="Black"></button>
+                  <button type="button" data-color="#F5F5F3" style="background:#F5F5F3" title="Light"></button>
+                  <button type="button" data-color="#5B6D82" style="background:#5B6D82" title="Slate-blue"></button>
+                  <button type="button" data-color="#A9B7C8" style="background:#A9B7C8" title="Silver-blue"></button>
+                  <button type="button" data-color="#2563EB" style="background:#2563EB" title="Blue"></button>
+                  <button type="button" data-color="#DC2626" style="background:#DC2626" title="Red"></button>
+                  <button type="button" data-color="#16A34A" style="background:#16A34A" title="Green"></button>
                 </div>
                 <p id="color-note" class="mt-1 text-[11px] text-gray-400 hidden">
                   <span class="en">※ Iconify only reflects color on monochrome icons (via currentColor).</span>
@@ -405,6 +563,9 @@
     </div>
   </div>
 
+  <!-- Toast for copy feedback -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
   <!-- Footer -->
   <footer class="max-w-7xl mx-auto mt-12 pt-6 border-t border-gray-100 flex items-center justify-between gap-3 text-xs text-gray-500">
     <div class="flex items-center gap-2">
@@ -416,10 +577,14 @@
       <span>·</span>
       <a href="https://iconify.design" target="_blank" rel="noopener noreferrer" class="hover:text-gray-700 transition-colors">Iconify</a>
     </div>
-    <a href="https://github.com/tsuchiyalab-com/icons" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors">
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55v-2.13c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.27-1.69-1.27-1.69-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.75 2.69 1.24 3.34.95.1-.74.4-1.24.72-1.53-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.18-3.1-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.16 1.18.92-.26 1.9-.39 2.88-.39.98 0 1.96.13 2.88.39 2.2-1.49 3.16-1.18 3.16-1.18.62 1.59.23 2.76.11 3.05.74.81 1.18 1.84 1.18 3.1 0 4.43-2.69 5.41-5.25 5.69.41.36.78 1.06.78 2.13v3.16c0 .31.21.66.79.55C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z"/></svg>
-      <span>GitHub</span>
-    </a>
+    <div class="flex items-center gap-2">
+      <a href="https://github.com/tsuchiyalab-com/icons/releases" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-gray-700 transition-colors tabular-nums">v0.3</a>
+      <span class="text-gray-300">·</span>
+      <a href="https://github.com/tsuchiyalab-com/icons" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55v-2.13c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.27-1.69-1.27-1.69-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.75 2.69 1.24 3.34.95.1-.74.4-1.24.72-1.53-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.18-3.1-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.16 1.18.92-.26 1.9-.39 2.88-.39.98 0 1.96.13 2.88.39 2.2-1.49 3.16-1.18 3.16-1.18.62 1.59.23 2.76.11 3.05.74.81 1.18 1.84 1.18 3.1 0 4.43-2.69 5.41-5.25 5.69.41.36.78 1.06.78 2.13v3.16c0 .31.21.66.79.55C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z"/></svg>
+        <span>GitHub</span>
+      </a>
+    </div>
   </footer>
 
   <!-- Libraries -->
@@ -916,7 +1081,7 @@
       }
       if (langPick) applyLanguage(langPick);
 
-      // Theme: URL > localStorage > default "light"
+      // Theme: URL > localStorage > prefers-color-scheme > default "light"
       let themePick = null;
       if (get("theme") === "dark" || get("theme") === "light") themePick = get("theme");
       else {
@@ -924,6 +1089,10 @@
           const saved = localStorage.getItem("icons.theme");
           if (saved === "dark" || saved === "light") themePick = saved;
         } catch (_) {}
+        // Fall through to OS preference when nothing saved
+        if (!themePick && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+          themePick = "dark";
+        }
       }
       if (themePick) applyTheme(themePick);
 
@@ -1178,6 +1347,18 @@
       // Update download button count so users see what they're about to download.
       const dlCountEl = downloadAllBtn.querySelector(".dl-count");
       if (dlCountEl) dlCountEl.textContent = filtered.length === 0 ? "" : String(filtered.length);
+      const miniDlCountEl = document.querySelector(".mini-dl-count");
+      if (miniDlCountEl) miniDlCountEl.textContent = filtered.length === 0 ? "" : String(filtered.length);
+
+      // Empty-state visibility
+      const emptyEl = document.getElementById("empty-state");
+      if (emptyEl) {
+        const isEmpty = filtered.length === 0 && state.search.trim().length > 0;
+        emptyEl.classList.toggle("hidden", !isEmpty);
+        if (isEmpty) {
+          emptyEl.querySelectorAll(".empty-q").forEach((el) => { el.textContent = state.search; });
+        }
+      }
 
       const pageItems = filtered.slice(startIndex, endIndex);
 
@@ -1220,6 +1401,7 @@
             await copyForItem(item);
             copyBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i>';
             if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+            if (window.__onCopySuccess) window.__onCopySuccess(state.copyFormat || "svg");
             setTimeout(() => {
               copyBtn.innerHTML = '<i data-lucide="copy" class="w-4 h-4"></i>';
               if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
@@ -1525,6 +1707,71 @@
       });
     }
 
+    // Mini-header — scroll-triggered slim sticky header. Click forwarding so
+    // we don't duplicate state logic; mini buttons just trigger main ones.
+    const miniHeader = document.getElementById("mini-header");
+    let _miniVisible = false;
+    function updateMiniHeader() {
+      if (!miniHeader) return;
+      const shouldShow = window.scrollY > 160;
+      if (shouldShow !== _miniVisible) {
+        _miniVisible = shouldShow;
+        miniHeader.classList.toggle("visible", shouldShow);
+        miniHeader.setAttribute("aria-hidden", shouldShow ? "false" : "true");
+      }
+    }
+    window.addEventListener("scroll", updateMiniHeader, { passive: true });
+    document.getElementById("mini-theme")?.addEventListener("click", () => themeToggleBtn?.click());
+    document.getElementById("mini-lang")?.addEventListener("click", () => langToggleBtn?.click());
+    document.getElementById("mini-download")?.addEventListener("click", () => downloadAllBtn?.click());
+
+    // Search clear button
+    const searchWrap = document.querySelector(".search-wrap");
+    const searchClearBtn = document.getElementById("search-clear");
+    function syncSearchClearVisibility() {
+      if (searchWrap) searchWrap.classList.toggle("has-value", !!searchInput.value);
+    }
+    searchInput.addEventListener("input", syncSearchClearVisibility);
+    searchClearBtn?.addEventListener("click", () => {
+      searchInput.value = "";
+      state.search = "";
+      state.page = 1;
+      syncSearchClearVisibility();
+      searchInput.focus();
+      render();
+    });
+
+    // Color preset swatches
+    document.querySelectorAll(".color-presets button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const c = btn.dataset.color;
+        if (!c) return;
+        updateColor(c);
+        // Brief visual feedback
+        btn.classList.add("active");
+        setTimeout(() => btn.classList.remove("active"), 600);
+      });
+    });
+
+    // Toast for copy feedback
+    const toastEl = document.getElementById("toast");
+    let _toastTimer = null;
+    function showToast(message) {
+      if (!toastEl) return;
+      toastEl.textContent = message;
+      toastEl.classList.add("visible");
+      if (_toastTimer) clearTimeout(_toastTimer);
+      _toastTimer = setTimeout(() => toastEl.classList.remove("visible"), 1600);
+    }
+    const FORMAT_LABELS = {
+      "svg": "SVG", "jsx": "React (JSX)", "vue": "Vue (SFC)", "svelte": "Svelte",
+      "html": "HTML img", "png-1x": "PNG @1x", "png-2x": "PNG @2x", "png-3x": "PNG @3x"
+    };
+    window.__onCopySuccess = (format) => {
+      const fmtLabel = FORMAT_LABELS[format] || "SVG";
+      showToast(t("Copied as " + fmtLabel, fmtLabel + " をコピーしました"));
+    };
+
     // ---------- Keyboard shortcuts ----------
     window.addEventListener("keydown", (e) => {
       const ae = document.activeElement;
@@ -1686,6 +1933,9 @@ ${uses}
       try {
         readStateFromUrl();
         applyStateToControls();
+        // Sync UI states that are derived from controls
+        const sw = document.querySelector(".search-wrap");
+        if (sw) sw.classList.toggle("has-value", !!searchInput.value);
       } finally {
         urlSyncSuspended = false;
       }
