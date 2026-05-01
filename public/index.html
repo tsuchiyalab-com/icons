@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -55,28 +55,56 @@
     /* Editorial label tracking */
     .label-track { letter-spacing: 0.08em; text-transform: uppercase; font-size: 11px; }
     /* Brand wordmark in header */
-    .wordmark { letter-spacing: 0.18em; font-weight: 600; text-transform: uppercase; font-size: 11px; color: var(--tl-fg-soft); }
+    .wordmark { display: inline-flex; align-items: center; gap: 8px; letter-spacing: 0.18em; font-weight: 600; text-transform: uppercase; font-size: 11px; color: var(--tl-fg-soft); }
+    /* Bilingual visibility — controlled by html[lang]. Default lang is "en".
+       Following tsuchiyalab.com LP convention. */
+    [lang="en"] .jp { display: none !important; }
+    [lang="ja"] .en { display: none !important; }
+    /* Icon mark (TL monogram) — uses mask-image so currentColor controls fill.
+       This way the mark inverts cleanly when the page theme switches between
+       light and dark, matching the wordmark text. */
+    .brand-mark {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      background-color: currentColor;
+      -webkit-mask: url('/tsuchiyalab-mark.svg') no-repeat center / contain;
+              mask: url('/tsuchiyalab-mark.svg') no-repeat center / contain;
+      flex-shrink: 0;
+    }
   </style>
+  <link rel="icon" href="/tsuchiyalab-mark.svg" type="image/svg+xml" />
 </head>
 <body class="p-4 sm:p-6">
   <div class="max-w-7xl mx-auto">
     <div class="flex items-start justify-between gap-3">
       <div class="min-w-0">
-        <a href="https://tsuchiyalab.com" target="_blank" rel="noopener" class="wordmark hover:text-gray-900 transition-colors">TSUCHIYA LAB</a>
+        <a href="https://tsuchiyalab.com" target="_blank" rel="noopener" class="wordmark hover:text-gray-900 transition-colors" aria-label="Tsuchiya Lab">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>TSUCHIYA LAB</span>
+        </a>
         <h1 class="text-xl sm:text-2xl font-semibold text-gray-900 truncate mt-2">
           Icon Explorer <span class="text-gray-300 font-normal">·</span>
           <span id="source-badge" class="text-gray-700 font-medium">Lucide</span>
           <span id="collection-badge" class="text-gray-400 font-normal"></span>
         </h1>
         <p class="text-sm text-gray-500 mt-2 max-w-xl">
-          Browse and copy 200,000+ icons from Lucide and Iconify. Multi-format export, Japanese tag search, shareable URLs.
+          <span class="en">Browse and copy 200,000+ icons from Lucide and Iconify. Multi-format export, Japanese tag search, shareable URLs.</span>
+          <span class="jp">Lucide と Iconify から20万件以上のアイコンを検索・コピー。多形式書き出し・日本語タグ検索・URL共有に対応。</span>
         </p>
         <p id="status-line" class="text-xs text-gray-500 mt-2 hidden"></p>
       </div>
-      <button id="download-all-btn" class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white hover:border-gray-900 text-sm font-medium tracking-wide disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-        <span class="dl-label">Download Sprite</span>
-        <span class="dl-count text-xs text-gray-400 font-normal"></span>
-      </button>
+      <div class="shrink-0 flex items-center gap-2">
+        <button id="lang-toggle" class="text-xs px-2.5 py-2 rounded-lg border border-gray-200 bg-white hover:border-gray-900 transition-colors font-medium tracking-wide" aria-label="Toggle language">
+          <span class="en">日本語</span>
+          <span class="jp">English</span>
+        </button>
+        <button id="download-all-btn" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white hover:border-gray-900 text-sm font-medium tracking-wide disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+          <span class="dl-label en">Download Sprite</span>
+          <span class="dl-label jp">スプライトをDL</span>
+          <span class="dl-count text-xs text-gray-400 font-normal"></span>
+        </button>
+      </div>
     </div>
 
     <div class="mt-5 flex flex-col lg:flex-row gap-5">
@@ -84,16 +112,19 @@
       <main class="order-2 lg:order-1 flex-1 min-w-0">
         <div class="flex items-center justify-between gap-3">
           <div class="text-xs text-gray-500">
-            Showing <span id="showing-range" class="font-medium text-gray-700">0–0</span> of
+            <span class="en">Showing</span><span class="jp">表示中</span>
+            <span id="showing-range" class="font-medium text-gray-700">0–0</span>
+            <span class="en">of</span><span class="jp">/</span>
             <span id="total-count-display" class="font-medium text-gray-700">0</span>
             <span class="text-gray-300">/</span>
-            total in set: <span id="total-count" class="font-medium text-gray-700">0</span>
+            <span class="en">total in set:</span><span class="jp">セット合計:</span>
+            <span id="total-count" class="font-medium text-gray-700">0</span>
           </div>
 
           <div class="flex items-center gap-2">
-            <button id="prev-page" class="px-2 py-1 text-xs rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">Prev</button>
-            <button id="next-page" class="px-2 py-1 text-xs rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">Next</button>
-            <span class="text-xs text-gray-500">Page</span>
+            <button id="prev-page" class="px-2 py-1 text-xs rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"><span class="en">Prev</span><span class="jp">前へ</span></button>
+            <button id="next-page" class="px-2 py-1 text-xs rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"><span class="en">Next</span><span class="jp">次へ</span></button>
+            <span class="text-xs text-gray-500"><span class="en">Page</span><span class="jp">ページ</span></span>
             <input id="page-input" type="number" min="1" value="1" class="w-16 px-2 py-1 text-xs rounded border border-gray-200" />
             <span class="text-xs text-gray-500">/ <span id="total-pages">1</span></span>
           </div>
@@ -108,20 +139,21 @@
           <div class="grid grid-cols-1 gap-4">
 
             <div>
-              <label class="block text-xs text-gray-500 mb-1">Source</label>
+              <label class="block text-xs text-gray-500 mb-1"><span class="en">Source</span><span class="jp">ソース</span></label>
               <select id="source-select" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
                 <option value="lucide" selected>Lucide</option>
                 <option value="iconify">Iconify</option>
               </select>
               <p class="mt-1 text-[11px] text-gray-400">
-                IconifyはAPI経由でオンデマンド取得します。
+                <span class="en">Iconify icons are fetched on demand via API.</span>
+                <span class="jp">IconifyはAPI経由でオンデマンド取得します。</span>
               </p>
             </div>
 
             <div id="iconify-controls" class="hidden">
               <div class="flex items-center justify-between gap-2">
-                <label class="block text-xs text-gray-500">Iconify collection (prefix)</label>
-                <button id="browse-sets-btn" class="text-xs px-2 py-1 rounded border border-gray-200 hover:bg-gray-50">Browse sets</button>
+                <label class="block text-xs text-gray-500"><span class="en">Iconify collection (prefix)</span><span class="jp">Iconify コレクション (prefix)</span></label>
+                <button id="browse-sets-btn" class="text-xs px-2 py-1 rounded border border-gray-200 hover:bg-gray-50"><span class="en">Browse sets</span><span class="jp">セット一覧</span></button>
               </div>
 
               <div class="mt-2 flex gap-2">
@@ -139,7 +171,7 @@
                   <option value="_custom">Custom…</option>
                 </select>
                 <button id="iconify-load-btn" class="px-3 py-2 text-sm rounded-lg border border-gray-200 hover:bg-gray-50">
-                  Load
+                  <span class="en">Load</span><span class="jp">読込</span>
                 </button>
               </div>
 
@@ -148,30 +180,33 @@
               <div class="mt-2 flex items-center justify-between gap-2">
                 <label class="text-sm text-gray-600 flex items-center gap-2">
                   <input type="checkbox" id="iconify-include-hidden" class="h-4 w-4 rounded border-gray-300" />
-                  hidden/aliasも含める
+                  <span class="en">Include hidden/alias</span><span class="jp">hidden/aliasも含める</span>
                 </label>
                 <span id="iconify-meta" class="text-[11px] text-gray-400"></span>
               </div>
 
               <div class="mt-2 flex items-center justify-between gap-2">
-                <span class="text-[11px] text-gray-500">Iconify status:</span>
-                <span id="iconify-health" class="text-[11px] text-gray-500">unknown</span>
+                <span class="text-[11px] text-gray-500"><span class="en">Iconify status:</span><span class="jp">Iconify ステータス:</span></span>
+                <span id="iconify-health" class="text-[11px] text-gray-500"><span class="en">unknown</span><span class="jp">不明</span></span>
               </div>
             </div>
 
             <div>
-              <label class="block text-xs text-gray-500 mb-1">Search</label>
+              <label class="block text-xs text-gray-500 mb-1"><span class="en">Search</span><span class="jp">検索</span></label>
               <input type="text" id="search-input" placeholder="Search icons…  (press / to focus)" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm transition-shadow" />
               <div class="mt-2 flex items-center gap-2" id="lucide-all-toggle-row">
                 <input type="checkbox" id="all-icons-toggle" class="h-4 w-4 rounded border-gray-300" checked />
-                <label for="all-icons-toggle" class="text-sm text-gray-600">All Lucide icons</label>
-                <span id="all-icons-hint" class="text-xs text-gray-400 hidden">未検索でも全件をページ表示します。</span>
+                <label for="all-icons-toggle" class="text-sm text-gray-600"><span class="en">All Lucide icons</span><span class="jp">全 Lucide アイコン</span></label>
+                <span id="all-icons-hint" class="text-xs text-gray-400 hidden">
+                  <span class="en">All icons paginated even without a query.</span>
+                  <span class="jp">未検索でも全件をページ表示します。</span>
+                </span>
               </div>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block text-xs text-gray-500 mb-1">Size</label>
+                <label class="block text-xs text-gray-500 mb-1"><span class="en">Size</span><span class="jp">サイズ</span></label>
                 <div class="flex items-center gap-2">
                   <input type="range" id="size-slider" min="16" max="160" value="64" class="w-full" />
                   <span class="text-xs text-gray-600 w-12 text-right"><span id="size-value">64</span>px</span>
@@ -179,29 +214,33 @@
               </div>
 
               <div>
-                <label class="block text-xs text-gray-500 mb-1">Color</label>
+                <label class="block text-xs text-gray-500 mb-1"><span class="en">Color</span><span class="jp">色</span></label>
                 <div class="flex items-center gap-2">
                   <input type="color" id="color-picker" value="#111111" />
                   <input type="text" id="color-text" value="#111111" class="w-24 px-3 py-2 border border-gray-200 rounded-lg text-sm uppercase" />
                 </div>
                 <p id="color-note" class="mt-1 text-[11px] text-gray-400 hidden">
-                  ※ Iconifyは単色アイコンのみ色反映（currentColor置換）。
+                  <span class="en">※ Iconify only reflects color on monochrome icons (via currentColor).</span>
+                  <span class="jp">※ Iconifyは単色アイコンのみ色反映（currentColor置換）。</span>
                 </p>
               </div>
             </div>
 
             <div id="stroke-controls">
-              <label class="block text-xs text-gray-500 mb-1">Width (Lucide)</label>
+              <label class="block text-xs text-gray-500 mb-1"><span class="en">Width (Lucide)</span><span class="jp">線幅 (Lucide)</span></label>
               <div class="flex items-center gap-2">
                 <input type="range" id="width-slider" min="0.5" max="3" step="0.1" value="1.5" class="w-full" />
                 <span id="width-value" class="text-xs text-gray-600 w-10 text-right">1.5</span>
               </div>
-                <p id="stroke-note" class="mt-1 text-[11px] text-gray-400 hidden">※ Iconifyでは線幅変更は適用されません（塗りつぶしアイコンが多いため）。</p>
+                <p id="stroke-note" class="mt-1 text-[11px] text-gray-400 hidden">
+                  <span class="en">※ Stroke width does not apply to Iconify (most are filled icons).</span>
+                  <span class="jp">※ Iconifyでは線幅変更は適用されません（塗りつぶしアイコンが多いため）。</span>
+                </p>
             </div>
 
 
             <div>
-              <label class="block text-xs text-gray-500 mb-1">Copy as</label>
+              <label class="block text-xs text-gray-500 mb-1"><span class="en">Copy as</span><span class="jp">コピー形式</span></label>
               <select id="copy-format" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
                 <option value="svg" selected>SVG</option>
                 <option value="jsx">React (JSX/TSX)</option>
@@ -212,12 +251,15 @@
                 <option value="png-2x">PNG · 2x</option>
                 <option value="png-3x">PNG · 3x</option>
               </select>
-              <p class="mt-1 text-[11px] text-gray-400">Click any icon's copy button to copy in this format.</p>
+              <p class="mt-1 text-[11px] text-gray-400">
+                <span class="en">Click any icon's copy button to copy in this format.</span>
+                <span class="jp">アイコンのコピーボタンを押すと、この形式でコピーされます。</span>
+              </p>
             </div>
 
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-2">
-                <span class="text-xs text-gray-500">Per page</span>
+                <span class="text-xs text-gray-500"><span class="en">Per page</span><span class="jp">ページサイズ</span></span>
                 <select id="page-size" class="px-2 py-1 text-xs rounded border border-gray-200 bg-white">
                   <option value="120">120</option>
                   <option value="240" selected>240</option>
@@ -225,7 +267,7 @@
                   <option value="960">960</option>
                 </select>
               </div>
-              <button id="retest-btn" class="text-xs px-2 py-1 rounded border border-gray-200 hover:bg-gray-50">Re-test</button>
+              <button id="retest-btn" class="text-xs px-2 py-1 rounded border border-gray-200 hover:bg-gray-50"><span class="en">Re-test</span><span class="jp">再テスト</span></button>
             </div>
 
           </div>
@@ -240,20 +282,23 @@
     <div class="relative w-full max-w-3xl bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
       <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between gap-3">
         <div class="min-w-0">
-          <div class="text-sm font-semibold text-gray-800 truncate">Browse Iconify sets</div>
-          <div class="text-[11px] text-gray-500">/collections からセット一覧を取得します。</div>
+          <div class="text-sm font-semibold text-gray-800 truncate"><span class="en">Browse Iconify sets</span><span class="jp">Iconify セット一覧</span></div>
+          <div class="text-[11px] text-gray-500">
+            <span class="en">Fetches the list from /collections.</span>
+            <span class="jp">/collections からセット一覧を取得します。</span>
+          </div>
         </div>
-        <button id="close-sets-btn" class="px-2 py-1 rounded border border-gray-200 hover:bg-gray-50 text-xs">Close</button>
+        <button id="close-sets-btn" class="px-2 py-1 rounded border border-gray-200 hover:bg-gray-50 text-xs"><span class="en">Close</span><span class="jp">閉じる</span></button>
       </div>
 
       <div class="p-4 grid grid-cols-1 md:grid-cols-12 gap-4">
         <div class="md:col-span-4 space-y-3">
           <div>
-            <label class="block text-xs text-gray-500 mb-1">Search (prefix / name)</label>
+            <label class="block text-xs text-gray-500 mb-1"><span class="en">Search (prefix / name)</span><span class="jp">検索 (prefix / 名前)</span></label>
             <input id="sets-search" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="e.g. material, tabler, fluent" />
           </div>
           <div>
-            <label class="block text-xs text-gray-500 mb-1">License filter (best-effort)</label>
+            <label class="block text-xs text-gray-500 mb-1"><span class="en">License filter (best-effort)</span><span class="jp">ライセンスフィルタ (参考)</span></label>
             <div class="space-y-2 text-sm text-gray-700">
               <label class="flex items-center gap-2"><input id="lic-mit" type="checkbox" class="h-4 w-4" checked /> MIT</label>
               <label class="flex items-center gap-2"><input id="lic-apache" type="checkbox" class="h-4 w-4" checked /> Apache 2.0</label>
@@ -261,18 +306,19 @@
               <label class="flex items-center gap-2"><input id="lic-isc" type="checkbox" class="h-4 w-4" checked /> ISC / Unlicense / 0BSD / OFL</label>
             </div>
             <p class="mt-1 text-[11px] text-gray-500">
-              ※ ライセンス情報はIconifyのセット情報に依存します。採用前に必ず原典を確認してください。
+              <span class="en">※ License info comes from Iconify metadata. Always verify at the source before adoption.</span>
+              <span class="jp">※ ライセンス情報はIconifyのセット情報に依存します。採用前に必ず原典を確認してください。</span>
             </p>
           </div>
           <div class="flex items-center gap-2">
-            <button id="reload-sets" class="px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-sm">Reload</button>
+            <button id="reload-sets" class="px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-sm"><span class="en">Reload</span><span class="jp">再読み込み</span></button>
             <span id="sets-status" class="text-xs text-gray-500"></span>
           </div>
         </div>
 
         <div class="md:col-span-8">
           <div class="text-xs text-gray-500 mb-2">
-            Results: <span id="sets-count" class="font-medium text-gray-700">0</span>
+            <span class="en">Results:</span><span class="jp">結果:</span> <span id="sets-count" class="font-medium text-gray-700">0</span>
           </div>
           <div id="sets-list" class="h-[55vh] overflow-auto border border-gray-200 rounded-xl divide-y"></div>
         </div>
@@ -280,11 +326,10 @@
 
       <div class="px-4 py-3 border-t border-gray-100 flex items-center justify-between gap-3">
         <div class="text-[11px] text-gray-500">
-          選択したprefixを右サイドバーに反映します。
+          <span class="en">Applies the selected prefix to the sidebar.</span>
+          <span class="jp">選択したprefixを右サイドバーに反映します。</span>
         </div>
-        <button id="apply-set-btn" class="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium tracking-wide hover:bg-black disabled:opacity-40 disabled:cursor-not-allowed transition-colors" disabled>
-          Apply
-        </button>
+        <button id="apply-set-btn" class="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium tracking-wide hover:bg-black disabled:opacity-40 disabled:cursor-not-allowed transition-colors" disabled><span class="en">Apply</span><span class="jp">適用</span></button>
       </div>
     </div>
   </div>
@@ -292,10 +337,10 @@
   <!-- Footer -->
   <footer class="max-w-7xl mx-auto mt-12 pt-6 border-t border-gray-100 flex items-center justify-between gap-3 text-xs text-gray-500">
     <div class="flex items-center gap-2">
-      <span>Built by</span>
+      <span class="en">Built by</span><span class="jp">制作:</span>
       <a href="https://tsuchiyalab.com" target="_blank" rel="noopener noreferrer" class="font-medium text-gray-700 hover:text-gray-900 transition-colors">Tsuchiya Lab</a>
       <span class="text-gray-300">·</span>
-      <span>Icons by</span>
+      <span class="en">Icons by</span><span class="jp">アイコン:</span>
       <a href="https://lucide.dev" target="_blank" rel="noopener noreferrer" class="hover:text-gray-700 transition-colors">Lucide</a>
       <span>·</span>
       <a href="https://iconify.design" target="_blank" rel="noopener noreferrer" class="hover:text-gray-700 transition-colors">Iconify</a>
@@ -326,6 +371,44 @@
       if (!text) { el.classList.add("hidden"); el.textContent = ""; return; }
       el.classList.remove("hidden");
       el.textContent = text;
+    }
+
+    // ---------- i18n ----------
+    // Language toggle uses html[lang] attribute. CSS rules ([lang="en"] .jp,
+    // [lang="ja"] .en) handle static text visibility. Dynamic text (status
+    // messages, confirm dialogs, placeholders) uses t(en, ja) below.
+    function currentLang() {
+      return document.documentElement.lang === "ja" ? "ja" : "en";
+    }
+    function t(en, ja) {
+      return currentLang() === "ja" ? ja : en;
+    }
+    const I18N_PLACEHOLDERS = {
+      "search-input": {
+        en: "Search icons…  (press / to focus)",
+        ja: "アイコンを検索…  ( / でフォーカス)"
+      },
+      "iconify-prefix-custom": {
+        en: "e.g. material-symbols",
+        ja: "例: material-symbols"
+      },
+      "sets-search": {
+        en: "e.g. material, tabler, fluent",
+        ja: "例: material, tabler, fluent"
+      }
+    };
+    function applyLanguage(lang) {
+      const next = lang === "ja" ? "ja" : "en";
+      document.documentElement.lang = next;
+      try { localStorage.setItem("icons.lang", next); } catch (_) {}
+      // Update placeholders that can't be CSS-driven
+      for (const [id, vals] of Object.entries(I18N_PLACEHOLDERS)) {
+        const el = document.getElementById(id);
+        if (el) el.placeholder = vals[next];
+      }
+      // Update titles
+      const dlBtn = document.getElementById("download-all-btn");
+      if (dlBtn) dlBtn.title = next === "ja" ? "現在のフィルタ条件でスプライトをDL" : "Download a sprite of the current filtered set";
     }
     function isJapanese(s) {
       return /[぀-ヿ㐀-鿿ｦ-ﾟ]/.test(s);
@@ -585,7 +668,7 @@
         el.textContent = data && data.mdi ? "OK" : "OK?";
         el.className = "text-[11px] text-emerald-700";
       } catch (e) {
-        el.textContent = "NG (API blocked?)";
+        el.textContent = t("NG (API blocked?)", "NG（APIブロック？）");
         el.className = "text-[11px] text-rose-700";
       }
     }
@@ -649,6 +732,7 @@
       if (state.pageSize !== 240) p.set("ps", String(state.pageSize));
       if (state.copyFormat && state.copyFormat !== "svg") p.set("f", state.copyFormat);
       if (state.source === "lucide" && !state.useAllLucide) p.set("all", "0");
+      if (currentLang() === "ja") p.set("lang", "ja");
 
       const qs = p.toString();
       const newUrl = qs ? `${location.pathname}?${qs}` : location.pathname;
@@ -692,6 +776,17 @@
         }
       }
       if (get("all") === "0") state.useAllLucide = false;
+
+      // Language: URL param takes precedence over localStorage; localStorage takes precedence over default "en".
+      let langPick = null;
+      if (get("lang") === "ja" || get("lang") === "en") langPick = get("lang");
+      else {
+        try {
+          const saved = localStorage.getItem("icons.lang");
+          if (saved === "ja" || saved === "en") langPick = saved;
+        } catch (_) {}
+      }
+      if (langPick) applyLanguage(langPick);
     }
 
     function applyStateToControls() {
@@ -933,19 +1028,9 @@
       } else {
         downloadAllBtn.disabled = (filtered.length === 0);
       }
-      // Update download button label so users see what they're about to download.
-      const dlCount = filtered.length;
-      const dlLabel = downloadAllBtn.querySelector(".dl-label");
+      // Update download button count so users see what they're about to download.
       const dlCountEl = downloadAllBtn.querySelector(".dl-count");
-      if (dlLabel && dlCountEl) {
-        if (dlCount === 0) {
-          dlCountEl.textContent = "";
-          dlLabel.textContent = "Download Sprite";
-        } else {
-          dlCountEl.textContent = String(dlCount);
-          dlLabel.textContent = "Download Sprite";
-        }
-      }
+      if (dlCountEl) dlCountEl.textContent = filtered.length === 0 ? "" : String(filtered.length);
 
       const pageItems = filtered.slice(startIndex, endIndex);
 
@@ -1014,7 +1099,7 @@
       state.iconifyAliases = [];
       setModeUI();
 
-      setStatus(`Loading Iconify collection: ${prefix} ...`);
+      setStatus(t(`Loading Iconify collection: ${prefix} ...`, `Iconifyコレクションを読み込み中: ${prefix}…`));
       try {
         const data = await fetchIconifyCollection(prefix);
         const title = (data && (data.title || (data.info && data.info.name))) ? (data.title || data.info.name) : "";
@@ -1030,7 +1115,7 @@
         await render();
       } catch (e) {
         console.error(e);
-        setStatus(`Load failed: ${prefix}（APIブロック or prefix不存在の可能性）`);
+        setStatus(t(`Load failed: ${prefix} (API blocked or prefix not found)`, `読込失敗: ${prefix}（APIブロック or prefix 不存在の可能性）`));
         await render();
       }
     }
@@ -1272,6 +1357,16 @@
       writeStateToUrl();
     });
 
+    // Language toggle (JP/EN)
+    const langToggleBtn = document.getElementById("lang-toggle");
+    if (langToggleBtn) {
+      langToggleBtn.addEventListener("click", () => {
+        const next = currentLang() === "ja" ? "en" : "ja";
+        applyLanguage(next);
+        writeStateToUrl();
+      });
+    }
+
     // ---------- Keyboard shortcuts ----------
     window.addEventListener("keydown", (e) => {
       const ae = document.activeElement;
@@ -1321,11 +1416,14 @@
       const LARGE_THRESHOLD = 500;
       if (filtered.length > LARGE_THRESHOLD) {
         const human = filtered.length.toLocaleString();
-        const ok = window.confirm(
+        const msg = t(
           `Download a sprite with ${human} icons?\n\n` +
           `This will be a large SVG file. ` +
-          `Use the search box to narrow the set first if you only need specific icons.`
+          `Use the search box to narrow the set first if you only need specific icons.`,
+          `${human} 件のアイコンをまとめたスプライトをダウンロードしますか？\n\n` +
+          `SVG ファイルが大きくなります。特定のアイコンだけ必要な場合は、まず検索で絞り込んでからご利用ください。`
         );
+        const ok = window.confirm(msg);
         if (!ok) return;
       }
 
@@ -1342,7 +1440,7 @@
       }
 
       // Iconify sprite: fetch per icon SVG (network-heavy). Keep it available, but warn via status.
-      setStatus(`Building sprite from Iconify (${filtered.length} icons)...`);
+      setStatus(t(`Building sprite from Iconify (${filtered.length} icons)…`, `Iconifyからスプライトを構築中（${filtered.length} 個）…`));
       downloadAllBtn.disabled = true;
       try {
         const symbols = [];
@@ -1384,7 +1482,7 @@
         setStatus("");
       } catch (e) {
         console.error(e);
-        setStatus("Sprite build failed（ネットワーク/ブロック/アイコン数が多すぎる可能性）");
+        setStatus(t("Sprite build failed (network / blocked / too many icons)", "スプライト構築失敗（ネットワーク/ブロック/アイコン数が多すぎる可能性）"));
       } finally {
         downloadAllBtn.disabled = false;
       }
