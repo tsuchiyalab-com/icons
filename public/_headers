@@ -2,29 +2,36 @@
 #
 # Image-noindex policy (TSUCHIYA LAB): HTML stays indexable, images
 # do not. Primary defense is robots.txt User-agent: Googlebot-Image
-# Disallow; this file adds X-Robots-Tag: noindex as a secondary signal.
+# Disallow; this file adds X-Robots-Tag: noindex, noimageindex as a
+# secondary signal. The `noimageindex` directive specifically tells
+# Google Images not to use the asset.
+#
+# Aligned with RUN-TSUCHIYALAB-ALL-SITES-IMAGE-NOINDEX-POLICY-01.
 #
 # Workers Static Assets requires a leading slash on the match URL
 # (Pages accepts bare `*.png`, but the Workers validator rejects it).
 # `/*.png` matches any path that ends with `.png`.
 
 /*.png
-  X-Robots-Tag: noindex
+  X-Robots-Tag: noindex, noimageindex
 
 /*.jpg
-  X-Robots-Tag: noindex
+  X-Robots-Tag: noindex, noimageindex
 
 /*.jpeg
-  X-Robots-Tag: noindex
+  X-Robots-Tag: noindex, noimageindex
 
 /*.webp
-  X-Robots-Tag: noindex
+  X-Robots-Tag: noindex, noimageindex
 
 /*.gif
-  X-Robots-Tag: noindex
+  X-Robots-Tag: noindex, noimageindex
 
 /*.avif
-  X-Robots-Tag: noindex
+  X-Robots-Tag: noindex, noimageindex
+
+/*.ico
+  X-Robots-Tag: noindex, noimageindex
 
 # .svg is intentionally not blanket-blocked — the TSUCHIYA LAB mark
 # (tsuchiyalab-mark.svg) is a brand asset that should remain indexable.
