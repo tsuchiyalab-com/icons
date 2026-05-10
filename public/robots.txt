@@ -1,4 +1,24 @@
 User-agent: *
 Allow: /
 
+# --- Image search opt-out ---
+# HTML pages remain indexable. Image assets (rendered icons, OGP)
+# are kept out of Google Images / Bing Images per the TSUCHIYA LAB
+# image-noindex policy.
+
+User-agent: Googlebot-Image
+Disallow: /
+
+User-agent: Bingbot-Image
+Disallow: /
+
+User-agent: msnbot-Media
+Disallow: /
+
+User-agent: YandexImages
+Disallow: /
+
+User-agent: Baiduspider-image
+Disallow: /
+
 Sitemap: https://icons.tsuchiyalab.com/sitemap.xml

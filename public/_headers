@@ -1,0 +1,26 @@
+# Cloudflare Pages headers for icons.tsuchiyalab.com.
+#
+# Image-noindex policy (TSUCHIYA LAB): HTML stays indexable, images
+# do not. Primary defense is robots.txt User-agent: Googlebot-Image
+# Disallow; this file adds X-Robots-Tag: noindex as a secondary signal.
+
+*.png
+  X-Robots-Tag: noindex
+
+*.jpg
+  X-Robots-Tag: noindex
+
+*.jpeg
+  X-Robots-Tag: noindex
+
+*.webp
+  X-Robots-Tag: noindex
+
+*.gif
+  X-Robots-Tag: noindex
+
+*.avif
+  X-Robots-Tag: noindex
+
+# .svg is intentionally not blanket-blocked — the TSUCHIYA LAB mark
+# (tsuchiyalab-mark.svg) is a brand asset that should remain indexable.
