@@ -1,25 +1,29 @@
-# Cloudflare Pages headers for icons.tsuchiyalab.com.
+# Cloudflare Workers Static Assets headers for icons.tsuchiyalab.com.
 #
 # Image-noindex policy (TSUCHIYA LAB): HTML stays indexable, images
 # do not. Primary defense is robots.txt User-agent: Googlebot-Image
 # Disallow; this file adds X-Robots-Tag: noindex as a secondary signal.
+#
+# Workers Static Assets requires a leading slash on the match URL
+# (Pages accepts bare `*.png`, but the Workers validator rejects it).
+# `/*.png` matches any path that ends with `.png`.
 
-*.png
+/*.png
   X-Robots-Tag: noindex
 
-*.jpg
+/*.jpg
   X-Robots-Tag: noindex
 
-*.jpeg
+/*.jpeg
   X-Robots-Tag: noindex
 
-*.webp
+/*.webp
   X-Robots-Tag: noindex
 
-*.gif
+/*.gif
   X-Robots-Tag: noindex
 
-*.avif
+/*.avif
   X-Robots-Tag: noindex
 
 # .svg is intentionally not blanket-blocked — the TSUCHIYA LAB mark
