@@ -16,7 +16,7 @@
     "preview": "python3 -m http.server 8000 --directory public"
   },
   "devDependencies": {
-    "wrangler": "^4.79.0"
+    "wrangler": "^4.151.3"
   },
   "keywords": [
     "icons",
