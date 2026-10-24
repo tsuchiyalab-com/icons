@@ -25,5 +25,8 @@
     "svg",
     "icon-browser",
     "icon-explorer"
-  ]
+  ],
+  "overrides": {
+    "undici@^7.0.0": "7.30.1"
+  }
 }
